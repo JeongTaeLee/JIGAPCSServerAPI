@@ -1,0 +1,12 @@
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\bin\Debug\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\bin\Debug\JIGAPServerCSAPI.pdb
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csprojAssemblyReference.cache
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csproj.CoreCompileInputs.cache
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\CSharpServerPractice\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.pdb
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\bin\Debug\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\bin\Debug\JIGAPServerCSAPI.pdb
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csprojAssemblyReference.cache
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csproj.CoreCompileInputs.cache
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.pdb
