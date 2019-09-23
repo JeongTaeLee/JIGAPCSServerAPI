@@ -8,9 +8,11 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI.AsyncEventAPI
-{ 
-    class AsyncEventSocket : BaseSocket
-    {   
+{
+    public class AsyncEventSocket : BaseSocket
+    {
+        public delegate void SendProcessFunc(object obj, SocketAsyncEventArgs args);
+
         /// <summary>
         /// C# 소켓 클래스입니다.
         /// </summary>
@@ -33,8 +35,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// 전송할 패킷들을 한번에 한 개씩 전송하기 위한 컨테이너입니다.
         /// </summary>
         public Queue<BasePacket> sendPacketQueue { get => _sendPacketQueue; }
-        private Queue<BasePacket> _sendPacketQueue = new Queue<BasePacket>(); 
-        
+        private Queue<BasePacket> _sendPacketQueue = new Queue<BasePacket>(100);
+
+        private SendProcessFunc _sendProcess = null;
     
         public AsyncEventSocket() { }
 
@@ -50,7 +53,13 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         public override void StartSocket(string inIpAddress, int inPort, int inBlockingCount)
         {
             if (string.IsNullOrEmpty(inIpAddress))
-                throw new ArgumentNullException("[AsyncEventSocket.StartSocket] 인자 inIpAddress 함수가 NULL입니다.");
+                throw new ArgumentException("Param inIpAddress is NULL");
+
+            if (inPort < 0)
+                throw new ArgumentException("Param inPort is invalid");
+
+            if (inBlockingCount <= 0)
+                throw new ArgumentException("Param inBlockCount is invlild");
 
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
@@ -71,7 +80,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _recvArgs = null;
             _sendArgs = null;
 
-            _socket.Close();
+            if (_socket != null)
+                _socket.Close();
 
             _socket = null;
         }
@@ -83,26 +93,24 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="InvalidCastException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
         public override void Accept(BaseSocket inSocket)
         {
             if (inSocket == null)
-                throw new ArgumentNullException("[AsyncEventSocket.Accept] 인자 inSocket이 NULL입니다.");
+                throw new ArgumentException("Param inSocket is NULL");
 
             AsyncEventSocket asyncSocket = inSocket as AsyncEventSocket;
 
-            if (asyncSocket != null)
-                asyncSocket.SetSocket(_socket.Accept());
-            else
-                throw new ArgumentException("[AsyncEventSocket.Accept] 인자 형식이 잘못되었습니다.");
+            if (asyncSocket == null)
+                throw new ArgumentException("Param Type is Invalid");
+
+            asyncSocket.SetSocket(_socket.Accept());
         }
 
         /// <summary>
         /// 비동기적으로 클라이언트로부터 연결 요청을 받아들입니다.
         /// </summary>
-        /// <returns>true : 함수가 비동기 처리되고있습니다. false : 함수가 동기적으로 처리되었습니다(즉시 이벤트가 발생되었습니다)</returns>
         /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="SocketException"></exception>
         /// <exception cref="NotSupportedException"></exception>
@@ -137,57 +145,103 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
 
         /// <summary>
-        /// AysncEvent 객체를 등록합니다.
+        /// 비동기 송수신을 위한 SocketAsyncEventArgs를 셋팅합니다.
         /// </summary>
-        /// <param name="inRecvArgs"></param>
-        /// <param name="inSendArgs"></param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public void SetAsyncEvent(SocketAsyncEventArgs inRecvArgs, SocketAsyncEventArgs inSendArgs)
         {
             if (inRecvArgs == null || inSendArgs == null)
-                throw new ArgumentNullException("[AsyncEventSocket.SetAsyncEvent] 인자 inRecvArgs나 inSendArgs가 NULL입니다");
+                throw new ArgumentException("Param inRecvArgs and inSendArgs are NULL");
 
             _recvArgs = inRecvArgs;
             _sendArgs = inSendArgs;
         }
+
         public void SetSocket(Socket inSocket)
         {
             if (inSocket == null)
-                throw new ArgumentNullException("[AsyncEventSocket.SetSocket] 인지 inSocket이 NULL입니다.");
+                throw new ArgumentException("Param inSocket is NULL");
 
-            _socket = null;
+            _socket = inSocket;
         }
 
         /// <summary>
-        /// PacketQueue에 Packet을 추가합니다.
+        /// 비동기 전송을 수행하고 동기적으로 처리 되었을 때 호출할 전송 완료 함수를 셋팅합니다.
+        /// 만약 이 함수가 지정되지 않을 경우. 동기적으로 초기화 됐을 때 Complete 함수가 호출이 되지 않습니다.. 
         /// </summary>
-        /// <param name="inPacket"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public void SetSendCompleteSendProcess(SendProcessFunc inSendProcess)
+        {
+            if (inSendProcess == null)
+                throw new ArgumentException("Param inSendProcess NULL");
+
+            _sendProcess = inSendProcess;
+        }
+
+        /// <summary>
+        /// 호출시 PacketQueue에 다음 패킷이 있다면 비동기 전송을 실행합니다
+        /// </summary>
+        public void SendNextPacket()
+        {
+            BasePacket packet = null;
+
+            lock (_sendPacketQueue)
+            {
+                packet = _sendPacketQueue.Peek();
+            }
+
+            if (packet != null)
+            {
+                Array.Copy(packet.buffer.Array, 0, _sendArgs.Buffer, 0, packet.writePosition);
+
+                if (_socket.SendAsync(_sendArgs) == false)
+                {
+                    if (_sendProcess != null)
+                        _sendProcess(this, _sendArgs);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Packet Queue에 전송할 패킷을 추가합니다. 만약 Packet Queue가 비워있을 경우 바로 비동기 전송을 실행합니다.
+        /// </summary>
         /// <exception cref="ArgumentException"></exception>
         public void PushPacket(BasePacket inPacket)
         {
             if (inPacket == null)
-                throw new ArgumentNullException("[AsyncEventSocket.PushPacket] 인자 inPacket NULL입니다.");
+                throw new ArgumentException("Param inPacket is NULL");
 
+                
             lock (_sendPacketQueue)
             {
-                _sendPacketQueue.Enqueue(inPacket);        
+                _sendPacketQueue.Enqueue(inPacket); 
             }
+
+            SendNextPacket();
         }
 
-        public void PopPacket()
+        public BasePacket PopPacket()
         {
+            BasePacket packet = null;
+
             lock (_sendPacketQueue)
             {
-                _sendPacketQueue.Dequeue();
+               packet = _sendPacketQueue.Dequeue();
             }
+
+            return packet;
         }
 
         public BasePacket PeekPacket()
         {
+            BasePacket packet = null;
+
             lock (_sendPacketQueue)
-            { 
-                return _sendPacketQueue.Peek();
+            {
+                packet = _sendPacketQueue.Peek();
             }
+
+            return packet;
         }
     }
 }

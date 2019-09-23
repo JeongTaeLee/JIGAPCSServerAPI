@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{CDBFB0F4-5DEE-470C-A452-8D60532E2BFD}</ProjectGuid>
+    <ProjectGuid>{24A65043-464A-44E2-A19D-DE58EE9947FE}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>CSharpServerPractice</RootNamespace>
-    <AssemblyName>CSharpServerPractice</AssemblyName>
+    <RootNamespace>TestServer</RootNamespace>
+    <AssemblyName>TestServer</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -43,11 +43,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProcessLogic\TestProcessLogic.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\JIGAPServerCSAPI\JIGAPServerCSAPI.csproj">
+      <Project>{e806e2c5-8938-4478-ace7-b7a9b7a9e7fa}</Project>
+      <Name>JIGAPServerCSAPI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

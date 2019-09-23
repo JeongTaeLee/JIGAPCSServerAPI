@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI
 {
-    abstract class BaseSocket
+    public abstract class BaseSocket
     {
         public abstract void StartSocket(string inIpAddress, int inPort, int inBlockingCount);
         public abstract void CloseSocket();

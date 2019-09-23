@@ -8,14 +8,14 @@ using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI.AsyncEventAPI
 {
-    class AsyncEventObjectPool
+    public class AsyncEventObjectPool
     {
         private Stack<SocketAsyncEventArgs> _asyncEventStack = null;
 
         public AsyncEventObjectPool(int inCapacity)
         {
             if (inCapacity < 0)
-                throw new ArgumentException("[AsyncEventObjectPool] 인자 inCapacity 가 잘못되었습니다.");
+                throw new ArgumentException("Param inCapacity is invalid");
 
             _asyncEventStack = new Stack<SocketAsyncEventArgs>(inCapacity);
         }
@@ -23,11 +23,11 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <summary>
         /// 컨테이너에 Object를 추가합니다.
         /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public void Push(SocketAsyncEventArgs inArgs)
         {
             if (inArgs == null)
-                throw new ArgumentNullException("인자 inArgs가 NULL 입니다.");
+                throw new ArgumentException("Param inArgs is NULL");
 
             lock (_asyncEventStack)
             {
@@ -38,7 +38,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <summary>
         /// SocketAsyncArgs 하나 빼옵니다.
         /// </summary>
-        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public SocketAsyncEventArgs Pop()
         {
             lock(_asyncEventStack)

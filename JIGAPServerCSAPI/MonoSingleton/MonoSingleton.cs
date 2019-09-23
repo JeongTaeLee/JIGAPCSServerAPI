@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JIGAPServerCSAPI
 {
-    class MonoSingleton<T> where T :  MonoSingleton<T>, new()
+    public class MonoSingleton<T> where T :  MonoSingleton<T>, new()
     {
         private static T _instance = null;
         public static T instance

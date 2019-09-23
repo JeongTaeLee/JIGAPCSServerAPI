@@ -7,21 +7,39 @@ using System.Threading;
 
 namespace JIGAPServerCSAPI.Logic
 {
-    abstract class BaseServerLogic<ProcessLogic> where ProcessLogic : BaseProcessLogic, new() 
+    public abstract class BaseServerLogic : BaseDispose
     {
-        /// <summary>
-        /// 패킷 처리 작업 등을 수행할 ProcessLogic입니다 BaseProcessLogic 상속받습니다.
-        /// </summary>
-        protected ProcessLogic _processLogic = null;
-        public ProcessLogic processLogic { get => _processLogic; }
+        public delegate void LogPrinter(string inLog);
+
+        protected BaseProcessLogic _processLogic = null;
+        protected BaseProcessLogic processLogic { get => _processLogic; }
 
         protected Thread _acceptThread = null;
         protected Thread _ioThread = null;
 
-        public BaseServerLogic()
+        protected LogPrinter _logPrinter = null;
+
+        protected bool _isServerOn = false;
+
+        public BaseServerLogic(BaseProcessLogic inProcessLogic)
         {
-            _processLogic = new ProcessLogic();
+            _processLogic = inProcessLogic;
             _processLogic.InitializeProcessLogic();
+        }
+        protected override void ManagedDispose()
+        {
+            base.ManagedDispose();
+
+            _processLogic.ReleaseProccesLogic();
+            _processLogic = null;
+
+            _acceptThread = null;
+            _ioThread = null;
+
+            _logPrinter = null;
+
+
+            GC.Collect();
         }
 
         public abstract bool StartServer(string inIpAddress, int inPort, int inListenBlocking);
@@ -79,6 +97,31 @@ namespace JIGAPServerCSAPI.Logic
             if (_ioThread != null)
                 _ioThread.Join();
         }
+
+        protected void PrintLog(string inLog)
+        {
+            if (string.IsNullOrEmpty(inLog))
+                throw new ArgumentException("Param inLog is Empty string and NULL");
+
+            if (_logPrinter != null)
+                _logPrinter(inLog);
+        }
+
+        /// <summary>
+        /// 로그를 출력 할 수 있는 함수 포인터 변수를 셋팅합니다.
+        /// </summary>
+        /// <param name="inLogPrinter"></param>
+        public void SetLogPrinter(LogPrinter inLogPrinter)
+        {
+            if (inLogPrinter == null)
+                throw new ArgumentException("Param inLogPrinter is NULL");
+
+            _logPrinter = inLogPrinter;
+
+            _processLogic.SetLogPrinter(_logPrinter);
+        }
+
+        
 
     }
 }

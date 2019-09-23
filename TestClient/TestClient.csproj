@@ -4,16 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E806E2C5-8938-4478-ACE7-B7A9B7A9E7FA}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JIGAPServerCSAPI</RootNamespace>
-    <AssemblyName>JIGAPServerCSAPI</AssemblyName>
+    <ProjectGuid>{212696CF-3B39-413B-A111-9C0CA7C4293B}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TestClient</RootNamespace>
+    <AssemblyName>TestClient</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -41,22 +43,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncEventAPI\AsyncEventDefine.cs" />
-    <Compile Include="AsyncEventAPI\AsyncEventObjectPool.cs" />
-    <Compile Include="AsyncEventAPI\AsyncEventSocketPool.cs" />
-    <Compile Include="Dispose\BaseDispose.cs" />
-    <Compile Include="MonoSingleton\MonoSingleton.cs" />
-    <Compile Include="AsyncEventAPI\AsyncEventMemoryPool.cs" />
-    <Compile Include="Logic\ProcessLogic\BaseProcessLogic.cs" />
-    <Compile Include="AsyncEventAPI\AsyncEventServerLogic.cs" />
-    <Compile Include="Logic\ServerLogic\BaseServerLogic.cs" />
-    <Compile Include="Packet\BasePacket.cs" />
-    <Compile Include="Packet\PacketMemoryPool.cs" />
-    <Compile Include="Packet\TestPacket.cs" />
-    <Compile Include="Socket\BaseSocket.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="AsyncEventAPI\AsyncEventSocket.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JIGAPServerCSAPI\JIGAPServerCSAPI.csproj">
+      <Project>{e806e2c5-8938-4478-ace7-b7a9b7a9e7fa}</Project>
+      <Name>JIGAPServerCSAPI</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
