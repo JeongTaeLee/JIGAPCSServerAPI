@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JIGAPServerCSAPI
 {
-    class PacketMemoryPool : MonoSingleton<PacketMemoryPool>
+    public class PacketMemoryPool : MonoSingleton<PacketMemoryPool>
     {
         private byte[] _memoryBuffer = null;
 
@@ -58,6 +58,13 @@ namespace JIGAPServerCSAPI
             _isInitialize = true;
         }
 
+        public void ReleaseMemoryPool()
+        {
+            _memoryBuffer = null;
+            _freeIndexStack.Clear();
+            _isInitialize = false;
+        }
+
         /// <summary>
         /// 인자로 전달된 패킷 변수의 Byte Buffer를 할당합니다.
         /// </summary>
@@ -76,7 +83,9 @@ namespace JIGAPServerCSAPI
             if (_freeIndexStack.Count > 0)
             {
                 lock (_freeIndexStack)
+                {
                     inPacket.SetBuffer(_memoryBuffer, _freeIndexStack.Pop(), _eachBufferSize);
+                }
             }
             else
             {
@@ -112,10 +121,8 @@ namespace JIGAPServerCSAPI
             {
                 _freeIndexStack.Push(inPacket.buffer.Offset);
             }
-
+            
             Array.Clear(_memoryBuffer, inPacket.buffer.Offset, inPacket.buffer.Count);
-
-            inPacket.SetBuffer(null, 0, 0);
         }
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JIGAPServerCSAPI.Packet
+namespace JIGAPServerCSAPI
 {
-    class TestPacket : BasePacket
+    public class TestPacket : BasePacket
     {
         public TestPacket()
         {

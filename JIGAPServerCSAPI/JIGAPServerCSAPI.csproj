@@ -50,8 +50,9 @@
     <Compile Include="Logic\ProcessLogic\BaseProcessLogic.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventServerLogic.cs" />
     <Compile Include="Logic\ServerLogic\BaseServerLogic.cs" />
+    <Compile Include="PacketUtil\PacketResolve.cs" />
     <Compile Include="Packet\BasePacket.cs" />
-    <Compile Include="Packet\PacketMemoryPool.cs" />
+    <Compile Include="PacketUtil\PacketMemoryPool.cs" />
     <Compile Include="Packet\TestPacket.cs" />
     <Compile Include="Socket\BaseSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

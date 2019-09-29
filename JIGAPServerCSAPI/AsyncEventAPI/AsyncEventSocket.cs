@@ -38,8 +38,14 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         private Queue<BasePacket> _sendPacketQueue = new Queue<BasePacket>(100);
 
         private SendProcessFunc _sendProcess = null;
-    
-        public AsyncEventSocket() { }
+
+        private PacketResolve _packetResolve = null;
+        public PacketResolve packetResolve { get => _packetResolve; }
+
+        public AsyncEventSocket() {
+            _packetResolve = new PacketResolve(AsyncEventDefine._pakcetSize); 
+
+        }
 
         /// <summary>
         /// 인자로 전달 받은 정보로 서버를 오픈합니다.
@@ -144,6 +150,14 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _socket.Connect(ipEndPoint);
         }
 
+        public void SetSocket(Socket inSocket)
+        {
+            if (inSocket == null)
+                throw new ArgumentException("Param inSocket is NULL");
+
+            _socket = inSocket;
+        }
+
         /// <summary>
         /// 비동기 송수신을 위한 SocketAsyncEventArgs를 셋팅합니다.
         /// </summary>
@@ -155,14 +169,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             _recvArgs = inRecvArgs;
             _sendArgs = inSendArgs;
-        }
-
-        public void SetSocket(Socket inSocket)
-        {
-            if (inSocket == null)
-                throw new ArgumentException("Param inSocket is NULL");
-
-            _socket = inSocket;
         }
 
         /// <summary>
@@ -187,14 +193,21 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             lock (_sendPacketQueue)
             {
-                packet = _sendPacketQueue.Peek();
+                if (_sendPacketQueue.Count != 0)
+                    packet = this.PeekPacket();
             }
 
             if (packet != null)
             {
-                Array.Copy(packet.buffer.Array, 0, _sendArgs.Buffer, 0, packet.writePosition);
+                Array.Copy(packet.buffer.Array, packet.buffer.Offset, _sendArgs.Buffer, 0, packet.writePosition);
 
-                if (_socket.SendAsync(_sendArgs) == false)
+                int tempOffset = _sendArgs.Offset;
+                int _tempCount = _sendArgs.Count;
+
+                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, packet.writePosition);
+                bool panding = _socket.SendAsync(_sendArgs);
+
+                if (panding == false)
                 {
                     if (_sendProcess != null)
                         _sendProcess(this, _sendArgs);
@@ -210,18 +223,33 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             if (inPacket == null)
                 throw new ArgumentException("Param inPacket is NULL");
-
                 
             lock (_sendPacketQueue)
             {
                 _sendPacketQueue.Enqueue(inPacket); 
             }
 
-            SendNextPacket();
+            if (_sendPacketQueue.Count == 1)
+            {
+                Array.Copy(inPacket.buffer.Array, inPacket.buffer.Offset, _sendArgs.Buffer, 0, inPacket.writePosition);
+
+
+                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, inPacket.writePosition);
+                bool panding = _socket.SendAsync(_sendArgs);
+
+                if (panding == false)
+                {
+                    if (_sendProcess != null)
+                        _sendProcess(this, _sendArgs);
+                }
+            }
         }
 
         public BasePacket PopPacket()
         {
+            if (_sendPacketQueue.Count == 0)
+                return null;
+
             BasePacket packet = null;
 
             lock (_sendPacketQueue)
@@ -234,6 +262,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public BasePacket PeekPacket()
         {
+            if (_sendPacketQueue.Count == 0)
+                return null;
+                 
+
             BasePacket packet = null;
 
             lock (_sendPacketQueue)

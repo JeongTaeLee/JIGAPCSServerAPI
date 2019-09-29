@@ -22,18 +22,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             :base(inProcessLogic)
         {}
 
-        protected override void ManagedDispose()
-        {
-            //Austin Fix : GC 콜렉터 작업 진행해야합니다.
-            _serverSocket = null;
-
-            _asyncEventMemoryPool = null;
-            _asyncEventSocketPool = null;
-            _recvAsyncEventPool = null;
-            _sendAsyncEventPool = null;
-
-            base.ManagedDispose();
-        }
 
         /// <summary>
         /// 호출 시 서버 초기화와 서버 실행을 하는 함수입니다.
@@ -51,7 +39,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                 PacketMemoryPool.instance.InitializeMemoryPool(AsyncEventDefine._pakcetSize, AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount);
 
-                _asyncEventMemoryPool = new AsyncEventMemoryPool(AsyncEventDefine._pakcetSize, AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount);
+                _asyncEventMemoryPool = new AsyncEventMemoryPool(AsyncEventDefine._pakcetSize, (AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount) * 2);
                 
                 
                 _asyncEventSocketPool = new AsyncEventSocketPool(AsyncEventDefine._maxUserCount);
@@ -72,7 +60,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleteEventCallBack);
 
-                    _asyncEventMemoryPool.SetBuffer(args);
+                    if (_asyncEventMemoryPool.SetBuffer(args) == false)
+                        throw new Exception("asyncEventMemoryPool Size Over");
 
                     _recvAsyncEventPool.Push(args);
                 }
@@ -84,7 +73,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleteEventCallBack);
 
-                    _asyncEventMemoryPool.SetBuffer(args);
+                    if (_asyncEventMemoryPool.SetBuffer(args) == false)
+                        throw new Exception("asyncEventMemoryPool Size Over");
 
                     _sendAsyncEventPool.Push(args);
                 }
@@ -120,6 +110,22 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             JoinAcceptThread();
 
+            _serverSocket = null;
+
+            PacketMemoryPool.instance.ReleaseMemoryPool();
+
+            _asyncEventMemoryPool.ReleaseMemoryPool();
+            _asyncEventMemoryPool = null;
+
+            _asyncEventSocketPool.ReleaseObjectPool();
+            _asyncEventSocketPool = null;
+
+            _recvAsyncEventPool.ReleaseObjectPool();
+            _recvAsyncEventPool = null;
+
+            _sendAsyncEventPool.ReleaseObjectPool();
+            _sendAsyncEventPool = null;
+
             PrintLog("Server ended successfully");
         }
 
@@ -133,41 +139,73 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 base.AcceptTask();
 
                 AsyncEventSocket newClientSocket = null;
-
+            
                 try
                 { 
                     newClientSocket = _asyncEventSocketPool.Pop();
+
+                    if (newClientSocket == null)
+                    {
+                        PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _asyncEventSocketPool");
+                        continue;
+                    }
 
                     serverSocket.Accept(newClientSocket);
 
                     if (newClientSocket.socket.Connected)
                     {
                         SocketAsyncEventArgs recvArgs = _recvAsyncEventPool.Pop();
+                        if (recvArgs == null)
+                        {
+                            PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool");
+
+                            newClientSocket.CloseSocket();
+                            _asyncEventSocketPool.Push(newClientSocket);
+                            continue;
+                        }
+
                         recvArgs.UserToken = newClientSocket;
 
                         SocketAsyncEventArgs sendArgs = _sendAsyncEventPool.Pop();
+                        if (sendArgs == null)
+                        {
+                            PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool ");
+
+                            newClientSocket.CloseSocket();
+                            _asyncEventSocketPool.Push(newClientSocket);
+
+                            _recvAsyncEventPool.Push(recvArgs);
+                            continue;
+                        }
+
                         sendArgs.UserToken = newClientSocket;
 
                         newClientSocket.SetAsyncEvent(recvArgs, sendArgs);
 
                         processLogic.OnConnectClient(newClientSocket);
 
-                        bool pending = newClientSocket.socket.ReceiveAsync(recvArgs);
-                        if (pending == false)
+                        if (newClientSocket.socket.ReceiveAsync(recvArgs) == false)
                             OnRecvCompleteEventCallBack(this, recvArgs);
-                    }                    
+                    }          
+                    else
+                        _asyncEventSocketPool.Push(newClientSocket);
+
+                }
+                catch (SocketException ex)
+                {
+                    if (_isServerOn == false)
+                        return;
+
+                    PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
+
+                    OnCloseSocket(newClientSocket);
                 }
                 catch (Exception ex)
                 {
                     if (_isServerOn == false)
                         return;
-
-                    System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                    string fileName = stackTrace.GetFrame(0).GetFileName();
-                    fileName = fileName.Substring(fileName.LastIndexOf('\\') + 1);
-
-                    PrintLog($"[{fileName} Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                    
+                    PrintLog($"[{ex.TargetSite}] : { ex.Message}");
                     
                     OnCloseSocket(newClientSocket);
                 }
@@ -186,21 +224,19 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 {
                     if (inArgs.BytesTransferred > 0 && inArgs.SocketError == SocketError.Success)
                     {
-                        _processLogic.OnProcess(inArgs.UserToken as BaseSocket, inArgs.Buffer, inArgs.Offset, inArgs.BytesTransferred);
-
                         AsyncEventSocket token = inArgs.UserToken as AsyncEventSocket;
 
-                        if (token == null)
-                            throw new ArgumentException("Param inArgs is Type Error");
+                        _processLogic.OnProcess(token, inArgs);
 
-                        bool pending = token.socket.ReceiveAsync(inArgs);
-
-                        if (pending == false)
+                        if (token.socket.ReceiveAsync(inArgs) == false)
                             OnRecvCompleteEventCallBack(this, inArgs);
                     }
                     else
                     {
                         if (_isServerOn == false)
+                            return;
+
+                        if (inArgs != null)
                             return;
 
                         AsyncEventSocket closeSocket = inArgs.UserToken as AsyncEventSocket;
@@ -212,17 +248,21 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 }
 
             }
+            catch (SocketException ex)
+            {
+                if (_isServerOn == false)
+                    return;
+
+                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
+                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
+            }
             catch (Exception ex)
             {
                 if (_isServerOn == false)
                     return;
 
-                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                string fileName = stackTrace.GetFrame(0).GetFileName();
-                fileName = fileName.Substring(fileName.LastIndexOf('\\') + 1);
-
-                PrintLog($"[{fileName} Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                PrintLog($"[{ex.TargetSite}] : { ex.Message}");
+                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
             }
 
         }
@@ -238,31 +278,36 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 {
                     AsyncEventSocket socket = inArgs.UserToken as AsyncEventSocket;
 
-                    if (socket == null)
-                        throw new ArgumentException("Param inArgs is Type Error");
-
                     // 전송을 완료했으므로 Packet을 뺍니다.
                     BasePacket packet = socket.PopPacket();
 
                     // Austin Fix : 패킷 Pool 처리를 해서 패킷을 돌려주세요.
                     BasePacket.Destory(packet);
 
+                    inArgs.SetBuffer(inArgs.Buffer, inArgs.Offset, AsyncEventDefine._pakcetSize);
+
                     // 다음 패킷이 있으면 다음 패킷을 보냅니다.
                     socket.SendNextPacket();
                 }
+            }
+            catch (SocketException ex)
+            {
+                if (_isServerOn == false)
+                    return;
+
+                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
+                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
             }
             catch (Exception ex)
             {
                 if (_isServerOn == false)
                     return;
 
-                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                string fileName = stackTrace.GetFrame(0).GetFileName();
-                fileName = fileName.Substring(fileName.LastIndexOf('\\') + 1);
-
-                PrintLog($"[{fileName} Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                PrintLog($"[{ex.TargetSite}] : { ex.Message}");
+                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
             }
+
+            
         }
         /// <summary>
         /// 인자로 전달 된 소켓의 종료 처리를 하는 함수입니다.
@@ -270,7 +315,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         public void OnCloseSocket(AsyncEventSocket inSocket)
         {
             if (inSocket == null)
-                throw new ArgumentNullException("Param inSocket is NULL");
+                return;
 
             _recvAsyncEventPool.Push(inSocket.recvArgs);
             _sendAsyncEventPool.Push(inSocket.sendArgs);

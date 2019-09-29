@@ -10,14 +10,19 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 {
     public class AsyncEventObjectPool
     {
-        private Stack<SocketAsyncEventArgs> _asyncEventStack = null;
+        private Queue<SocketAsyncEventArgs> _asyncEventStack = null;
 
         public AsyncEventObjectPool(int inCapacity)
         {
             if (inCapacity < 0)
                 throw new ArgumentException("Param inCapacity is invalid");
 
-            _asyncEventStack = new Stack<SocketAsyncEventArgs>(inCapacity);
+            _asyncEventStack = new Queue<SocketAsyncEventArgs>(inCapacity);
+        }
+        public void ReleaseObjectPool()
+        {
+            _asyncEventStack.Clear();
+            _asyncEventStack = null;
         }
 
         /// <summary>
@@ -31,7 +36,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             lock (_asyncEventStack)
             {
-                _asyncEventStack.Push(inArgs);
+                _asyncEventStack.Enqueue(inArgs);
             }
         }
 
@@ -41,9 +46,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <exception cref="InvalidOperationException"></exception>
         public SocketAsyncEventArgs Pop()
         {
+            if (_asyncEventStack.Count == 0)
+                return null;
+
             lock(_asyncEventStack)
             {
-                return _asyncEventStack.Pop();
+                return _asyncEventStack.Dequeue();
             }
         }
 

@@ -51,7 +51,8 @@ namespace JIGAPServerCSAPI
         {
             T packet = new T();
 
-            PacketMemoryPool.instance.SetBuffer(packet);
+            if (PacketMemoryPool.instance.SetBuffer(packet) == false)
+                throw new Exception("PacketMemoryPool is buffer size over");
 
             return packet;
         }
@@ -63,7 +64,7 @@ namespace JIGAPServerCSAPI
         public static void Destory(BasePacket inBasePacket)
         {
             if (inBasePacket == null)
-                throw new ArgumentException("Param inBasePacket is NULL");
+                return;
 
             PacketMemoryPool.instance.FreeBuffer(inBasePacket);
         }

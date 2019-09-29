@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Net.Sockets;
+
 namespace JIGAPServerCSAPI.Logic
 {
     public abstract class BaseProcessLogic
@@ -14,7 +16,7 @@ namespace JIGAPServerCSAPI.Logic
         public abstract void ReleaseProccesLogic();
         public abstract void OnDisconnectClient(BaseSocket inSocket);
         public abstract void OnConnectClient(BaseSocket inSocket);
-        public abstract void OnProcess(BaseSocket inSocket, byte[] inPacket, int inOffset, int inCount);
+        public abstract void OnProcess(BaseSocket inSocket, SocketAsyncEventArgs inArgs);
 
         protected void PrintLog(string inLog)
         {

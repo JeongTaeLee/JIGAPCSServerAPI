@@ -28,8 +28,6 @@ namespace JIGAPServerCSAPI.Logic
         }
         protected override void ManagedDispose()
         {
-            base.ManagedDispose();
-
             _processLogic.ReleaseProccesLogic();
             _processLogic = null;
 
@@ -37,9 +35,6 @@ namespace JIGAPServerCSAPI.Logic
             _ioThread = null;
 
             _logPrinter = null;
-
-
-            GC.Collect();
         }
 
         public abstract bool StartServer(string inIpAddress, int inPort, int inListenBlocking);
@@ -73,6 +68,7 @@ namespace JIGAPServerCSAPI.Logic
         {
             _ioThread = new Thread(new ThreadStart(IOThread));
             _ioThread.Start();
+
             Thread.Sleep(0);
         }
 
@@ -85,6 +81,8 @@ namespace JIGAPServerCSAPI.Logic
         {
             if (_acceptThread != null)
                 _acceptThread.Join();
+
+            _acceptThread = null;
         }
 
         /// <summary>
@@ -96,6 +94,8 @@ namespace JIGAPServerCSAPI.Logic
         {
             if (_ioThread != null)
                 _ioThread.Join();
+
+            _ioThread = null;
         }
 
         protected void PrintLog(string inLog)

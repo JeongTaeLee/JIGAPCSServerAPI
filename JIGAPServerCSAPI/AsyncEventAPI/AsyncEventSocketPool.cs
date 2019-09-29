@@ -18,6 +18,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _asyncEventSocketStack = new Stack<AsyncEventSocket>(inCapacity);
         }
 
+        public void ReleaseObjectPool()
+        {
+            _asyncEventSocketStack.Clear();
+            _asyncEventSocketStack = null;
+        }
+
         /// <summary>
         /// AsyncEventSocket Stack에서 인자로 전달된 Socket을 추가합니다.
         /// </summary>
@@ -25,7 +31,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         public void Push(AsyncEventSocket inSocket)
         {
             if (inSocket == null)
-                throw new ArgumentException("Param inArgs is NULL");
+                return;
 
             lock (_asyncEventSocketStack)
             {
@@ -38,7 +44,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
         public AsyncEventSocket Pop()
-        {
+        { 
+            if (_asyncEventSocketStack.Count == 0)
+                return null;
+
             lock (_asyncEventSocketStack)
             {
                 return _asyncEventSocketStack.Pop();

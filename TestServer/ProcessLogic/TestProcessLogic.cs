@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 using JIGAPServerCSAPI;
+
 
 namespace TestServer
 {
@@ -30,9 +32,25 @@ namespace TestServer
             PrintLog($"[TestProcessLogic.OnDisconnectClient] disconnect to server");
         }
 
-        public override void OnProcess(BaseSocket inSocket, byte[] inPacket, int inOffset, int inCount)
+        public override void OnProcess(BaseSocket inSocket, SocketAsyncEventArgs inArgs)
         {
-            
+            JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket socket = inSocket as JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket;
+            socket.packetResolve.PacketCheck(inArgs.Buffer, inArgs.Offset, inArgs.BytesTransferred, PacketProcess);
+
+            //string str = Encoding.UTF8.GetString(inArgs.Buffer, inArgs.Offset, inArgs.Count);
+            //
+            //PrintLog(str);
+            //
+            //TestPacket packet = BasePacket.Create<TestPacket>();
+            //
+            //packet.SettingPacket(inArgs.Buffer, inArgs.Offset, inArgs.Count);
+            //socket.PushPacket(packet);
+        }
+
+        public void PacketProcess(byte[] inBuffer, int inOffset, int inCount)
+        {
+            string str = Encoding.UTF8.GetString(inBuffer, inOffset, inCount);
+            PrintLog(str);
         }
 
         public override void ReleaseProccesLogic()

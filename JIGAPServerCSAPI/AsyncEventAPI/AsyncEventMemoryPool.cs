@@ -48,6 +48,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _memoryBuffer = new byte[_totalBufferSize];
         }
 
+        public void ReleaseMemoryPool()
+        {
+            _freeIndexStack.Clear();
+            _memoryBuffer = null;
+        }
+
         /// <summary>
         /// 인자로 전닯 받은 SocketAsyncEventArgs 객체에 메모리를 할당합니다.
         /// </summary>
