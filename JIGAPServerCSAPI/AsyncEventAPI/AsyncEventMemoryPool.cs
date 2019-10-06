@@ -10,12 +10,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 {
     public class AsyncEventMemoryPool
     {
-        private byte[] _memoryBuffer = null;
+        private byte[] _buffers = null;
 
         /// <summary>
         /// 한개의 EventArgs에 버퍼에 할당 가능한 크기입니다.
         /// </summary>
-        private int _eachBufferSize = 0;
+        private int _bufSetSize = 0;
 
         /// <summary>
         /// 할당 가능한 버퍼의 시작 위치입니다.
@@ -25,33 +25,31 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <summary>
         /// 총 버퍼 사이즈입니다.
         /// </summary>
-        private int _totalBufferSize = 0;
+        private int _totalBufSize = 0;
 
         /// <summary>
         /// free된 메모리의 시작 위치가 보관되는 Stack입니다.
         /// </summary>
-        private Stack<int> _freeIndexStack = new Stack<int>();
+        private Stack<int> _freeIndexs = new Stack<int>();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="inEachBufferSize">한개의 EventArgs에 버퍼에 할당 가능한 크기입니다.</param>
+
+        /// <param name="inBufSetSize">한개의 EventArgs에 버퍼에 할당 가능한 크기입니다.</param>
         /// <param name="inTotalSize">총 버퍼의 사이즈입니다.</param>
-        public AsyncEventMemoryPool(int inEachBufferSize, int inTotalSize)
+        public AsyncEventMemoryPool(int inBufSetSize, int inTotalSize)
         {
-            if (inEachBufferSize < 0 || inTotalSize < 0)
+            if (inBufSetSize < 0 || inTotalSize < 0)
                 throw new ArgumentException("Param inEachBufferSize and inTotalSize are invalid");
 
-            _eachBufferSize = inEachBufferSize;
-            _totalBufferSize = inTotalSize;
+            _bufSetSize = inBufSetSize;
+            _totalBufSize = inTotalSize;
 
-            _memoryBuffer = new byte[_totalBufferSize];
+            _buffers = new byte[_totalBufSize];
         }
 
         public void ReleaseMemoryPool()
         {
-            _freeIndexStack.Clear();
-            _memoryBuffer = null;
+            _freeIndexs.Clear();
+            _buffers = null;
         }
 
         /// <summary>
@@ -67,21 +65,21 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 throw new ArgumentNullException("Param inArgs is NULL");
 
             // Free된 메모리 인덱스가 있다면.
-            if (_freeIndexStack.Count > 0)
+            if (_freeIndexs.Count > 0)
             {
-                lock (_freeIndexStack)
+                lock (_freeIndexs)
                 {
-                    inArgs.SetBuffer(_memoryBuffer, _freeIndexStack.Pop(), _eachBufferSize);
+                    inArgs.SetBuffer(_buffers, _freeIndexs.Pop(), _bufSetSize);
                 }
             }
             else
             {
                 // 충분한 버퍼를 가지고 있지 않을 때.
-                if ((_totalBufferSize - _eachBufferSize) < _currentIndex)
+                if ((_totalBufSize - _bufSetSize) < _currentIndex)
                     return false;
 
-                inArgs.SetBuffer(_memoryBuffer, _currentIndex, _eachBufferSize);
-                _currentIndex += _eachBufferSize;
+                inArgs.SetBuffer(_buffers, _currentIndex, _bufSetSize);
+                _currentIndex += _bufSetSize;
             }
             
 
@@ -98,9 +96,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             if (inArgs == null)
                 throw new ArgumentException("Param inArgs is NULL.");
 
-            lock(_freeIndexStack)
+            lock(_freeIndexs)
             {
-                _freeIndexStack.Push(inArgs.Offset);
+                _freeIndexs.Push(inArgs.Offset);
             }
 
             inArgs.SetBuffer(null, 0, 0);

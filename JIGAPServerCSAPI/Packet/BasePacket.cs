@@ -11,25 +11,22 @@ namespace JIGAPServerCSAPI
         /// <summary>
         /// PacketMemoryPool에서 참조한 배열의 정보가 들어있는 구조체입니다.
         /// </summary>
-        protected ArraySegment<byte> _buffer;
+        protected ArraySegment<byte> _bufferSegment;
         public ArraySegment<byte> buffer
         {
-            get => _buffer;
+            get => _bufferSegment;
         }
 
         /// <summary>
         /// 현재 어디까지 쓰여졌는지를 저장하는 변수 입니다. Packet을 이어붙힐때 사용합니다.
         /// </summary>
-        protected int _writePosition = 0;
-        public int writePosition { get => _writePosition; }
+        protected int _writingPosition = 0;
+        public int writingPosition { get => _writingPosition; }
 
 
         /// <summary>
-        /// 사용할 배열을 지정합니다.
+        /// Packet의 버퍼를 할당.
         /// </summary>
-        /// <param name="inBuffer">사용할 배열 입니다.</param>
-        /// <param name="inOffset">사용할 배열 부분의 시작 위치입니다.</param>
-        /// <param name="inCount">사용할 배열의 크기 입니다.</param>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public void SetBuffer(byte[] inBuffer, int inOffset, int inCount)
@@ -39,26 +36,26 @@ namespace JIGAPServerCSAPI
             if ((inOffset + inCount) >= inBuffer.Length)
                 throw new ArgumentOutOfRangeException();
 
-            _buffer = new ArraySegment<byte>(inBuffer, inOffset, inCount);
+            _bufferSegment = new ArraySegment<byte>(inBuffer, inOffset, inCount);
         }
 
         /// <summary>
-        /// Packet을 클래스를 인스턴스화 합니다.
+        /// Packet 인스턴스 화 함.
         /// </summary>
-        /// <typeparam name="T">BasePacket을 상속받는 생성하고자 하는 클래스의 타입입니다</typeparam>
+        /// <typeparam name="T">인스턴스화 할 타입(BasePacket의 자식 클래스)</typeparam>
         /// <returns></returns>
         public static T Create<T>() where T : BasePacket, new()
         {
             T packet = new T();
 
             if (PacketMemoryPool.instance.SetBuffer(packet) == false)
-                throw new Exception("PacketMemoryPool is buffer size over");
+                return null;
 
             return packet;
         }
 
         /// <summary>
-        /// Create 되었던 Packet을 삭제합니다. Packet 버퍼는 다시 PacketMemoryPool에 되돌려집니다.
+        /// 인스턴스화된 패킷 삭제.
         /// </summary>
         /// <param name="inBasePacket"></param>
         public static void Destory(BasePacket inBasePacket)

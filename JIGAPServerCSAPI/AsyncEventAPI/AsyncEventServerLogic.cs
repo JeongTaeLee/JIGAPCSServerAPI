@@ -41,7 +41,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                 _asyncEventMemoryPool = new AsyncEventMemoryPool(AsyncEventDefine._pakcetSize, (AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount) * 2);
                 
-                
                 _asyncEventSocketPool = new AsyncEventSocketPool(AsyncEventDefine._maxUserCount);
                 for (int i = 0; i < AsyncEventDefine._maxUserCount; ++i)
                 {
@@ -59,6 +58,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     SocketAsyncEventArgs args = new SocketAsyncEventArgs();
 
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleteEventCallBack);
+
 
                     if (_asyncEventMemoryPool.SetBuffer(args) == false)
                         throw new Exception("asyncEventMemoryPool Size Over");
@@ -160,6 +160,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                             PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool");
 
                             newClientSocket.CloseSocket();
+
                             _asyncEventSocketPool.Push(newClientSocket);
                             continue;
                         }
@@ -172,9 +173,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                             PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool ");
 
                             newClientSocket.CloseSocket();
-                            _asyncEventSocketPool.Push(newClientSocket);
 
+                            _asyncEventSocketPool.Push(newClientSocket);
                             _recvAsyncEventPool.Push(recvArgs);
+
                             continue;
                         }
 
@@ -220,6 +222,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             try
             {
+                if (inArgs == null)
+                    return;
+
                 if (inArgs.LastOperation == SocketAsyncOperation.Receive)
                 {
                     if (inArgs.BytesTransferred > 0 && inArgs.SocketError == SocketError.Success)
@@ -228,7 +233,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                         _processLogic.OnProcess(token, inArgs);
 
-                        if (token.socket.ReceiveAsync(inArgs) == false)
+                        bool isPending = token.socket.ReceiveAsync(inArgs);
+
+                        if (isPending == false)
                             OnRecvCompleteEventCallBack(this, inArgs);
                     }
                     else
@@ -236,7 +243,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                         if (_isServerOn == false)
                             return;
 
-                        if (inArgs != null)
+                        if (inArgs == null)
                             return;
 
                         AsyncEventSocket closeSocket = inArgs.UserToken as AsyncEventSocket;
@@ -248,22 +255,32 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 }
 
             }
-            catch (SocketException ex)
+            catch (ArgumentException ex)
             {
                 if (_isServerOn == false)
                     return;
 
-                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
-                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
+                PrintLog($"[{ex.TargetSite}] : { ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
+
+                AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
+
+                _processLogic.OnDisconnectClient(errorSocket);
+                OnCloseSocket(errorSocket);
             }
             catch (Exception ex)
             {
                 if (_isServerOn == false)
                     return;
+                
+                PrintLog($"[{ex.TargetSite}] : { ex.Message }\r\n<Stack>\r\n{ex.StackTrace}");
 
-                PrintLog($"[{ex.TargetSite}] : { ex.Message}");
-                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
+                AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
+
+                _processLogic.OnDisconnectClient(errorSocket);
+                OnCloseSocket(errorSocket);
             }
+
+
 
         }
 
@@ -284,6 +301,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     // Austin Fix : 패킷 Pool 처리를 해서 패킷을 돌려주세요.
                     BasePacket.Destory(packet);
 
+                    // 패킷을 보낸 후 사이즈를 버퍼 사이즈를 정삭적으로 돌려놓습니다.
                     inArgs.SetBuffer(inArgs.Buffer, inArgs.Offset, AsyncEventDefine._pakcetSize);
 
                     // 다음 패킷이 있으면 다음 패킷을 보냅니다.
@@ -295,7 +313,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 if (_isServerOn == false)
                     return;
 
-                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
+                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
+
+                _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
                 OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
             }
             catch (Exception ex)
@@ -303,7 +323,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 if (_isServerOn == false)
                     return;
 
-                PrintLog($"[{ex.TargetSite}] : { ex.Message}");
+                PrintLog($"[{ex.TargetSite}] : { ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
+
+                _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
                 OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
             }
 
@@ -316,6 +338,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             if (inSocket == null)
                 return;
+
+            inSocket.packetResolve.Clear();
 
             _recvAsyncEventPool.Push(inSocket.recvArgs);
             _sendAsyncEventPool.Push(inSocket.sendArgs);

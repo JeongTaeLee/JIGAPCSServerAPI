@@ -8,75 +8,92 @@ namespace JIGAPServerCSAPI
 {
     public class PacketResolve
     {
-        private byte[]  _buffer = null;
-        private int     _maxBufferSize  = 0;
-        private int     _writePosition  = 0;
-        private bool    _readHeader     = false;
-        private int     _packetSize = 0;
+        private byte[]  _buffers            = null;
+        private int     _totalBufSize       = 0;
+        private int     _writingPosition    = 0;
+        private int     _packetSize         = 0;
+        private bool    _isReadHeader        = false;
+
         public PacketResolve(int _bufferTotalSize)
         {
-            _maxBufferSize = _bufferTotalSize;
-            _buffer = new byte[_maxBufferSize];
+            _totalBufSize = _bufferTotalSize;
+            _buffers = new byte[_totalBufSize];
         }
 
         public virtual void PacketCheck(byte[] inBuffer, int inOffset, int inBytesTransferred, Action<byte[], int, int> inCompleteAction)
         {
-            int paramBufferPosition = 0; 
-
+            int readBufSize = 0;
+           
             while (true)
             {    
-                if (_readHeader == false)
+                if (_isReadHeader == false)
                 {
-                    if ((inBytesTransferred - paramBufferPosition)>= sizeof(Int32))
+                    if ((inBytesTransferred - readBufSize) >= sizeof(Int32))
                     {
-                        ConnectPacketToBuffer(inBuffer, inOffset + paramBufferPosition, sizeof(Int32));
-                        paramBufferPosition += sizeof(Int32);
+                        ConnectPacketToBuffer(inBuffer, inOffset + readBufSize, sizeof(Int32));
+                        readBufSize += sizeof(Int32);
 
-                        _packetSize = BitConverter.ToInt32(_buffer, 0);
+                        _packetSize = BitConverter.ToInt32(_buffers, 0);
 
-                        _readHeader = true;
+                        _isReadHeader = true;
                     }
                     else
                     {
-                        ConnectPacketToBuffer(inBuffer, inOffset + paramBufferPosition, inBytesTransferred - paramBufferPosition);
+                        ConnectPacketToBuffer(inBuffer, inOffset + readBufSize, inBytesTransferred - readBufSize);
                         break;
                     }
                 }
 
-                if (inBytesTransferred >= _packetSize)
+                if (inBytesTransferred - readBufSize >= (_packetSize - sizeof(Int32)) )
                 {
-                    ConnectPacketToBuffer(inBuffer, inOffset + paramBufferPosition, (_packetSize - sizeof(Int32)));
-                    paramBufferPosition += _packetSize - sizeof(Int32);
+                    ConnectPacketToBuffer(inBuffer, inOffset + readBufSize, (_packetSize - sizeof(Int32)));
+                    readBufSize += _packetSize - sizeof(Int32);
                 }
                 else
                 {
-                    ConnectPacketToBuffer(inBuffer, inOffset + paramBufferPosition, inBytesTransferred - paramBufferPosition);
+                    ConnectPacketToBuffer(inBuffer, inOffset + readBufSize, inBytesTransferred - readBufSize);
                     break;
                 }
 
-                if (_writePosition == _packetSize)
+                if (_writingPosition == _packetSize)
                 {
                     if (inCompleteAction != null)
-                        inCompleteAction(_buffer, sizeof(Int32), _writePosition - sizeof(Int32));
+                        inCompleteAction(_buffers, sizeof(Int32), _writingPosition - sizeof(Int32));
                 }
 
-                if (paramBufferPosition < inBytesTransferred)
-                { 
-                    Array.Clear(_buffer, 0, _buffer.Length);
+                Array.Clear(_buffers, 0, _buffers.Length);
 
-                    _readHeader = false;
-                    _writePosition = 0;
-                    _packetSize = 0;
-                }
-                else
+                _isReadHeader = false;
+                _writingPosition = 0;
+                _packetSize = 0;
+
+                
+                if (readBufSize >= inBytesTransferred)
                     break;
             }
         }
             
         public virtual void ConnectPacketToBuffer(byte[] inBuffer, int inOffset, int inBytesTransferred)
         {
-            Array.Copy(inBuffer, inOffset, _buffer, _writePosition, inBytesTransferred);
-            _writePosition += inBytesTransferred;
+            if (inBuffer == null)
+                return;
+
+            if (inOffset < 0 || inBytesTransferred < 0)
+                return;
+
+            if (inBuffer.Length < inBytesTransferred)
+                return;
+
+            Array.Copy(inBuffer, inOffset, _buffers, _writingPosition, inBytesTransferred);
+            _writingPosition += inBytesTransferred;
+        }
+        public void Clear()
+        {
+            Array.Clear(_buffers, 0, _buffers.Length);
+
+            _isReadHeader = false;
+            _writingPosition = 0;
+            _packetSize = 0;
         }
 
     }

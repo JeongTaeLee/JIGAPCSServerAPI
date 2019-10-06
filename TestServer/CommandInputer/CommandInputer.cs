@@ -40,7 +40,7 @@ namespace TestServer
         public void InputCommand(string inCmdStr)
         {
             if (string.IsNullOrEmpty(inCmdStr))
-                throw new ArgumentException("Param inDDefaultCmdFunc is NULL or Empty");
+                Console.Write("Please Input Comment");
 
             string[] splitStr = inCmdStr.Split(' ');
 

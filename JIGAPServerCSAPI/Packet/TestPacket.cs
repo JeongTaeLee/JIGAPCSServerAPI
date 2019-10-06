@@ -10,7 +10,7 @@ namespace JIGAPServerCSAPI
     {
         public TestPacket()
         {
-            _writePosition += sizeof(int);
+            _writingPosition += sizeof(int);
         }
 
         /// <summary>
@@ -27,8 +27,8 @@ namespace JIGAPServerCSAPI
             if (inOffset < 0 || inCount < 0)
                 throw new ArgumentException("Param inOffset and inCount are invalid");
 
-            Buffer.BlockCopy(inArray, inOffset, _buffer.Array, _writePosition, inCount);
-            _writePosition += inCount;
+            Buffer.BlockCopy(inArray, inOffset, _bufferSegment.Array, _writingPosition, inCount);
+            _writingPosition += inCount;
 
             WritePacketSize();
         }
@@ -38,8 +38,8 @@ namespace JIGAPServerCSAPI
         /// </summary>
         private void WritePacketSize()
         {
-            byte[] sizeBuffer = BitConverter.GetBytes(_writePosition);
-            Buffer.BlockCopy(sizeBuffer, 0, _buffer.Array, 0, sizeBuffer.Length);
+            byte[] sizeBuffer = BitConverter.GetBytes(_writingPosition);
+            Buffer.BlockCopy(sizeBuffer, 0, _bufferSegment.Array, 0, sizeBuffer.Length);
         }
     }
 }

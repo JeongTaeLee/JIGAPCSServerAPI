@@ -9,3 +9,4 @@ E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\bin\Debug\JIGAP
 E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csproj.CoreCompileInputs.cache
 E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.dll
 E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.pdb
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Debug\JIGAPServerCSAPI.csprojAssemblyReference.cache

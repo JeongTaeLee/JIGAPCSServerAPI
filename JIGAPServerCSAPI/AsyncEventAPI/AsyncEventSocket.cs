@@ -13,34 +13,31 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
     {
         public delegate void SendProcessFunc(object obj, SocketAsyncEventArgs args);
 
-        /// <summary>
-        /// C# 소켓 클래스입니다.
-        /// </summary>
         public Socket socket { get => _socket; }
         private Socket _socket = null;
 
-        /// <summary>
-        /// Recv용 Socket Event 변수입니다.
-        /// </summary>
         public SocketAsyncEventArgs recvArgs { get => _recvArgs; }
         private SocketAsyncEventArgs _recvArgs = null;
 
-        /// <summary>
-        /// Recv용 Socket Event 변수입니다.
-        /// </summary>
         public SocketAsyncEventArgs sendArgs { get => _sendArgs; }
         private SocketAsyncEventArgs _sendArgs = null;
 
         /// <summary>
-        /// 전송할 패킷들을 한번에 한 개씩 전송하기 위한 컨테이너입니다.
+        /// 순차 전달을 위한 전달 패킷 컨테이너
         /// </summary>
-        public Queue<BasePacket> sendPacketQueue { get => _sendPacketQueue; }
-        private Queue<BasePacket> _sendPacketQueue = new Queue<BasePacket>(100);
+        public Queue<BasePacket> sendPackets { get => _sendPackets; }
+        private Queue<BasePacket> _sendPackets = new Queue<BasePacket>(100);
 
-        private SendProcessFunc _sendProcess = null;
-
+        /// <summary>
+        /// TCP 패킷 결합 담당 클래스
+        /// </summary>
         private PacketResolve _packetResolve = null;
         public PacketResolve packetResolve { get => _packetResolve; }
+
+        /// <summary>
+        /// 동기적 패킷 전송 완료 시 호출 함수
+        /// </summary>
+        private SendProcessFunc _sendProcess = null;
 
         public AsyncEventSocket() {
             _packetResolve = new PacketResolve(AsyncEventDefine._pakcetSize); 
@@ -48,7 +45,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
 
         /// <summary>
-        /// 인자로 전달 받은 정보로 서버를 오픈합니다.
+        /// 인자로 받은 정보로 서버 시작
         /// </summary>
         /// <exception cref="SocketException"></exception>
         /// <exception cref="ArgumentException"></exception>
@@ -93,7 +90,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
 
         /// <summary>
-        /// 클라이언트측으로부터 연결 요청을 받아들입니다.
+        /// 클라이언트 연결 요청 대기 함수.
         /// </summary>
         /// <exception cref="SocketException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
@@ -113,7 +110,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
 
         /// <summary>
-        /// 비동기적으로 클라이언트로부터 연결 요청을 받아들입니다.
+        /// 비동기적 클라이언트 연결 요청 대기 함수.
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -127,7 +124,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
 
         /// <summary>
-        /// 인자로 받은 주소 정보로 서버에 연결 요청 합니다.
+        /// 인자로 받은 정보로 서버에 연결 요청 전송.
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException "></exception>
@@ -158,10 +155,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _socket = inSocket;
         }
 
-        /// <summary>
-        /// 비동기 송수신을 위한 SocketAsyncEventArgs를 셋팅합니다.
-        /// </summary>
-        /// <exception cref="ArgumentException"></exception>
         public void SetAsyncEvent(SocketAsyncEventArgs inRecvArgs, SocketAsyncEventArgs inSendArgs)
         {
             if (inRecvArgs == null || inSendArgs == null)
@@ -171,11 +164,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _sendArgs = inSendArgs;
         }
 
-        /// <summary>
-        /// 비동기 전송을 수행하고 동기적으로 처리 되었을 때 호출할 전송 완료 함수를 셋팅합니다.
-        /// 만약 이 함수가 지정되지 않을 경우. 동기적으로 초기화 됐을 때 Complete 함수가 호출이 되지 않습니다.. 
-        /// </summary>
-        /// <exception cref="ArgumentException"></exception>
         public void SetSendCompleteSendProcess(SendProcessFunc inSendProcess)
         {
             if (inSendProcess == null)
@@ -184,27 +172,21 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _sendProcess = inSendProcess;
         }
 
-        /// <summary>
-        /// 호출시 PacketQueue에 다음 패킷이 있다면 비동기 전송을 실행합니다
-        /// </summary>
         public void SendNextPacket()
         {
             BasePacket packet = null;
 
-            lock (_sendPacketQueue)
+            lock (_sendPackets)
             {
-                if (_sendPacketQueue.Count != 0)
+                if (_sendPackets.Count != 0)
                     packet = this.PeekPacket();
             }
 
             if (packet != null)
             {
-                Array.Copy(packet.buffer.Array, packet.buffer.Offset, _sendArgs.Buffer, 0, packet.writePosition);
+                Array.Copy(packet.buffer.Array, packet.buffer.Offset, _sendArgs.Buffer, 0, packet.writingPosition);
 
-                int tempOffset = _sendArgs.Offset;
-                int _tempCount = _sendArgs.Count;
-
-                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, packet.writePosition);
+                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, packet.writingPosition);
                 bool panding = _socket.SendAsync(_sendArgs);
 
                 if (panding == false)
@@ -215,26 +197,21 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             }
         }
 
-        /// <summary>
-        /// Packet Queue에 전송할 패킷을 추가합니다. 만약 Packet Queue가 비워있을 경우 바로 비동기 전송을 실행합니다.
-        /// </summary>
-        /// <exception cref="ArgumentException"></exception>
         public void PushPacket(BasePacket inPacket)
         {
             if (inPacket == null)
                 throw new ArgumentException("Param inPacket is NULL");
                 
-            lock (_sendPacketQueue)
+            lock (_sendPackets)
             {
-                _sendPacketQueue.Enqueue(inPacket); 
+                _sendPackets.Enqueue(inPacket); 
             }
 
-            if (_sendPacketQueue.Count == 1)
+            if (_sendPackets.Count == 1)
             {
-                Array.Copy(inPacket.buffer.Array, inPacket.buffer.Offset, _sendArgs.Buffer, 0, inPacket.writePosition);
+                Array.Copy(inPacket.buffer.Array, inPacket.buffer.Offset, _sendArgs.Buffer, 0, inPacket.writingPosition);
 
-
-                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, inPacket.writePosition);
+                _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, inPacket.writingPosition);
                 bool panding = _socket.SendAsync(_sendArgs);
 
                 if (panding == false)
@@ -247,14 +224,14 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public BasePacket PopPacket()
         {
-            if (_sendPacketQueue.Count == 0)
+            if (_sendPackets.Count == 0)
                 return null;
 
             BasePacket packet = null;
 
-            lock (_sendPacketQueue)
+            lock (_sendPackets)
             {
-               packet = _sendPacketQueue.Dequeue();
+               packet = _sendPackets.Dequeue();
             }
 
             return packet;
@@ -262,15 +239,15 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public BasePacket PeekPacket()
         {
-            if (_sendPacketQueue.Count == 0)
+            if (_sendPackets.Count == 0)
                 return null;
                  
 
             BasePacket packet = null;
 
-            lock (_sendPacketQueue)
+            lock (_sendPackets)
             {
-                packet = _sendPacketQueue.Peek();
+                packet = _sendPackets.Peek();
             }
 
             return packet;
