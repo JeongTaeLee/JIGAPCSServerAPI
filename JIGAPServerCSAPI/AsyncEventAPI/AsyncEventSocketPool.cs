@@ -20,6 +20,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public void ReleaseObjectPool()
         {
+            foreach (AsyncEventSocket tempSocket in _asyncEventSockets)
+                tempSocket.CloseSocket();
+
             _asyncEventSockets.Clear();
             _asyncEventSockets = null;
         }

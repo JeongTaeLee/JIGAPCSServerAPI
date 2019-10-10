@@ -36,9 +36,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             {
                 _serverSocket = new AsyncEventSocket(_packetMaxSize);
                 _serverSocket.StartSocket(inIpAddress, inPort, inListenBlocking);
-
+                
                 PacketMemoryPool.instance.InitializeMemoryPool(_packetMaxSize, _packetMaxSize * _userMaxCount);
-
+                
                 _asyncEventMemoryPool = new AsyncEventMemoryPool(_packetMaxSize, (_packetMaxSize * _userMaxCount) * 2);
                 
                 _asyncEventSocketPool = new AsyncEventSocketPool(_userMaxCount);
@@ -46,37 +46,37 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 {
                     AsyncEventSocket _socket = new AsyncEventSocket(_packetMaxSize);
                     _socket.SetSendCompleteSendProcess(OnSendCompleteEventCallBack);
-
+                
                     _asyncEventSocketPool.Push(_socket);
                 }
-
+                
                 _recvAsyncEventPool = new AsyncEventObjectPool(_userMaxCount);
                 for (int i = 0; i < _userMaxCount; ++i)
                 {
                     SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-
+                
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleteEventCallBack);
-
-
+                
+                
                     if (_asyncEventMemoryPool.SetBuffer(args) == false)
                         throw new Exception("asyncEventMemoryPool Size Over");
-
+                
                     _recvAsyncEventPool.Push(args);
                 }
-
+                
                 _sendAsyncEventPool = new AsyncEventObjectPool(_userMaxCount);
                 for (int i = 0; i < _userMaxCount; ++i)
                 {
                     SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-
+                
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleteEventCallBack);
-
+                
                     if (_asyncEventMemoryPool.SetBuffer(args) == false)
                         throw new Exception("asyncEventMemoryPool Size Over");
-
+                
                     _sendAsyncEventPool.Push(args);
                 }
-
+                
                 StartAcceptThread();
 
                 _isServerOn = true;
@@ -92,6 +92,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 fileName = fileName.Substring(fileName.LastIndexOf('\\') + 1);
 
                 PrintLog($"[{fileName} Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+
+                return false;
             }
 
             return true;
@@ -104,25 +106,28 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             _isServerOn = false;
 
-            _serverSocket.CloseSocket();
+            _serverSocket?.CloseSocket();
 
             JoinAcceptThread();
-
+            
             _serverSocket = null;
+
+            _asyncEventSocketPool?.ReleaseObjectPool();
+            _asyncEventSocketPool = null;
+
+            _recvAsyncEventPool?.ReleaseObjectPool();
+            _recvAsyncEventPool = null;
+
+            _sendAsyncEventPool?.ReleaseObjectPool();
+            _sendAsyncEventPool = null;
+
+            _asyncEventMemoryPool?.ReleaseMemoryPool();
+            _asyncEventMemoryPool = null;
 
             PacketMemoryPool.instance.ReleaseMemoryPool();
 
-            _asyncEventMemoryPool.ReleaseMemoryPool();
-            _asyncEventMemoryPool = null;
-
-            _asyncEventSocketPool.ReleaseObjectPool();
-            _asyncEventSocketPool = null;
-
-            _recvAsyncEventPool.ReleaseObjectPool();
-            _recvAsyncEventPool = null;
-
-            _sendAsyncEventPool.ReleaseObjectPool();
-            _sendAsyncEventPool = null;
+            _processLogic?.ReleaseProccesLogic();
+            _processLogic = null;
 
             PrintLog("Server ended successfully");
         }

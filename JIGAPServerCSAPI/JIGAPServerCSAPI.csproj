@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="AsyncEventAPI\AsyncEventObjectPool.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventSocketPool.cs" />
-    <Compile Include="Dispose\BaseDispose.cs" />
     <Compile Include="MonoSingleton\MonoSingleton.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventMemoryPool.cs" />
     <Compile Include="Logic\ProcessLogic\BaseProcessLogic.cs" />

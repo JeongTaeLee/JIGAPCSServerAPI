@@ -21,6 +21,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         }
         public void ReleaseObjectPool()
         {
+            foreach(SocketAsyncEventArgs tempEvent in _asyncEvents)
+                tempEvent.SetBuffer(null, 0, 0);
+
             _asyncEvents.Clear();
             _asyncEvents = null;
         }

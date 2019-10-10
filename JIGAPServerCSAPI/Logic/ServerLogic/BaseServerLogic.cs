@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace JIGAPServerCSAPI.Logic
 {
-    public abstract class BaseServerLogic : BaseDispose
+    public abstract class BaseServerLogic
     {
         public delegate void LogPrinter(string inLog);
 
@@ -20,6 +20,7 @@ namespace JIGAPServerCSAPI.Logic
         protected LogPrinter _logPrinter = null;
 
         protected bool _isServerOn = false;
+        public bool isServerOn { get => _isServerOn; }
 
         protected int _userMaxCount = 100000;
 
@@ -30,16 +31,6 @@ namespace JIGAPServerCSAPI.Logic
         {
             _processLogic = inProcessLogic;
             _processLogic.InitializeProcessLogic();
-        }
-        protected override void ManagedDispose()
-        {
-            _processLogic.ReleaseProccesLogic();
-            _processLogic = null;
-
-            _acceptThread = null;
-            _ioThread = null;
-
-            _logPrinter = null;
         }
 
         public abstract bool StartServer(string inIpAddress, int inPort, int inListenBlocking);

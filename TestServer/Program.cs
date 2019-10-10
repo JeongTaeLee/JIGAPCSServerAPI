@@ -29,29 +29,27 @@ namespace TestServer
             switch (inStr[1])
             {
                 case "open":
-                    if (serverLogic != null)
+                    if (serverLogic.isServerOn)
                     {
                         PrintLog("Server is open");
                         return;
                     }
 
-                    serverLogic = new JIGAPServerCSAPI.AsyncEventAPI.AsyncEventServerLogic(new TestProcessLogic());
                     serverLogic.SetLogPrinter(PrintLog);
                     serverLogic.StartServer(_serverInfomation.ipAddress, _serverInfomation.portNumber, _serverInfomation.blockingCount);
 
                     break;
 
                 case "close":
-                    if (serverLogic == null)
+                    if (serverLogic.isServerOn == false)
                     {
                         PrintLog("Server is not open");
                         return;
                     }
 
                     serverLogic.EndServer();
-
-                    serverLogic.Dispose();
                     serverLogic = null;
+
                     GC.Collect();
                     break;
             }
@@ -100,6 +98,8 @@ namespace TestServer
 
         static void Main(string[] args)
         {
+            serverLogic = new JIGAPServerCSAPI.AsyncEventAPI.AsyncEventServerLogic(new TestProcessLogic());
+
             _serverInfomation.SetIpAddress("127.0.0.1");
             _serverInfomation.SetPortNumber(9199);
             _serverInfomation.SetBlockingCount(50);
