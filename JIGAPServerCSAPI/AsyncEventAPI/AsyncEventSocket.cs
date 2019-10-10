@@ -39,8 +39,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// </summary>
         private SendProcessFunc _sendProcess = null;
 
-        public AsyncEventSocket() {
-            _packetResolve = new PacketResolve(AsyncEventDefine._pakcetSize); 
+        public AsyncEventSocket(int inMaxPacketSize) {
+            _packetResolve = new PacketResolve(inMaxPacketSize); 
 
         }
 

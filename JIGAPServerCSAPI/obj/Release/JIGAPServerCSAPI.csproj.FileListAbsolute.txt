@@ -1,0 +1,6 @@
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\bin\Release\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\bin\Release\JIGAPServerCSAPI.pdb
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Release\JIGAPServerCSAPI.csprojAssemblyReference.cache
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Release\JIGAPServerCSAPI.csproj.CoreCompileInputs.cache
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Release\JIGAPServerCSAPI.dll
+E:\DevelopmentFile\3_MyProject\JIGAPCSServerAPI\JIGAPServerCSAPI\obj\Release\JIGAPServerCSAPI.pdb

@@ -21,6 +21,11 @@ namespace JIGAPServerCSAPI.Logic
 
         protected bool _isServerOn = false;
 
+        protected int _userMaxCount = 100000;
+
+        protected int _packetMaxSize = 2048;
+        
+
         public BaseServerLogic(BaseProcessLogic inProcessLogic)
         {
             _processLogic = inProcessLogic;
@@ -121,7 +126,15 @@ namespace JIGAPServerCSAPI.Logic
             _processLogic.SetLogPrinter(_logPrinter);
         }
 
-        
+       
+        public virtual void  SetUserCount(int inUserCount)
+        {
+            _userMaxCount = inUserCount;
+        }
 
+        public virtual void SetPaketSize(int inPacketSize)
+        {
+            _packetMaxSize = inPacketSize;
+        }
     }
 }

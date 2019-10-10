@@ -34,26 +34,24 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             try
             {
-                _serverSocket = new AsyncEventSocket();
+                _serverSocket = new AsyncEventSocket(_packetMaxSize);
                 _serverSocket.StartSocket(inIpAddress, inPort, inListenBlocking);
 
-                PacketMemoryPool.instance.InitializeMemoryPool(AsyncEventDefine._pakcetSize, AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount);
+                PacketMemoryPool.instance.InitializeMemoryPool(_packetMaxSize, _packetMaxSize * _userMaxCount);
 
-                _asyncEventMemoryPool = new AsyncEventMemoryPool(AsyncEventDefine._pakcetSize, (AsyncEventDefine._pakcetSize * AsyncEventDefine._maxUserCount) * 2);
+                _asyncEventMemoryPool = new AsyncEventMemoryPool(_packetMaxSize, (_packetMaxSize * _userMaxCount) * 2);
                 
-                _asyncEventSocketPool = new AsyncEventSocketPool(AsyncEventDefine._maxUserCount);
-                for (int i = 0; i < AsyncEventDefine._maxUserCount; ++i)
+                _asyncEventSocketPool = new AsyncEventSocketPool(_userMaxCount);
+                for (int i = 0; i < _userMaxCount; ++i)
                 {
-                    AsyncEventSocket _socket = new AsyncEventSocket();
-
+                    AsyncEventSocket _socket = new AsyncEventSocket(_packetMaxSize);
                     _socket.SetSendCompleteSendProcess(OnSendCompleteEventCallBack);
 
-                    _asyncEventSocketPool.Push(new AsyncEventSocket());
-                    
+                    _asyncEventSocketPool.Push(_socket);
                 }
 
-                _recvAsyncEventPool = new AsyncEventObjectPool(AsyncEventDefine._maxUserCount);
-                for (int i = 0; i < AsyncEventDefine._maxUserCount; ++i)
+                _recvAsyncEventPool = new AsyncEventObjectPool(_userMaxCount);
+                for (int i = 0; i < _userMaxCount; ++i)
                 {
                     SocketAsyncEventArgs args = new SocketAsyncEventArgs();
 
@@ -66,8 +64,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     _recvAsyncEventPool.Push(args);
                 }
 
-                _sendAsyncEventPool = new AsyncEventObjectPool(AsyncEventDefine._maxUserCount);
-                for (int i = 0; i < AsyncEventDefine._maxUserCount; ++i)
+                _sendAsyncEventPool = new AsyncEventObjectPool(_userMaxCount);
+                for (int i = 0; i < _userMaxCount; ++i)
                 {
                     SocketAsyncEventArgs args = new SocketAsyncEventArgs();
 
@@ -302,7 +300,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     BasePacket.Destory(packet);
 
                     // 패킷을 보낸 후 사이즈를 버퍼 사이즈를 정삭적으로 돌려놓습니다.
-                    inArgs.SetBuffer(inArgs.Buffer, inArgs.Offset, AsyncEventDefine._pakcetSize);
+                    inArgs.SetBuffer(inArgs.Buffer, inArgs.Offset, _packetMaxSize);
 
                     // 다음 패킷이 있으면 다음 패킷을 보냅니다.
                     socket.SendNextPacket();

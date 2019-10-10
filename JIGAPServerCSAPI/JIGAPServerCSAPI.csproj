@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncEventAPI\AsyncEventDefine.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventObjectPool.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventSocketPool.cs" />
     <Compile Include="Dispose\BaseDispose.cs" />
