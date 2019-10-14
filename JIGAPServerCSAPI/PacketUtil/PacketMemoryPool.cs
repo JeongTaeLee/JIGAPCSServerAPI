@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JIGAPServerCSAPI
 {
-    public class PacketMemoryPool : MonoSingleton<PacketMemoryPool>
+    public class PacketMemoryPool : Singleton<PacketMemoryPool>
     {
         private byte[] _buffers = null;
 

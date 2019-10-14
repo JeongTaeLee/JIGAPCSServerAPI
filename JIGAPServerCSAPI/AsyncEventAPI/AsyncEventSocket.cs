@@ -11,8 +11,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 {
     public class AsyncEventSocket : BaseSocket
     {
-        public delegate void SendProcessFunc(object obj, SocketAsyncEventArgs args);
-
         public Socket socket { get => _socket; }
         private Socket _socket = null;
 
@@ -37,7 +35,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <summary>
         /// 동기적 패킷 전송 완료 시 호출 함수
         /// </summary>
-        private SendProcessFunc _sendProcess = null;
+        private Action<object, SocketAsyncEventArgs> _sendProcess = null;
 
         public AsyncEventSocket(int inMaxPacketSize) {
             _packetResolve = new PacketResolve(inMaxPacketSize); 
@@ -164,7 +162,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _sendArgs = inSendArgs;
         }
 
-        public void SetSendCompleteSendProcess(SendProcessFunc inSendProcess)
+        public void SetSendCompleteSendProcess(Action<object, SocketAsyncEventArgs> inSendProcess)
         {
             if (inSendProcess == null)
                 throw new ArgumentException("Param inSendProcess NULL");

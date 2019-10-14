@@ -10,7 +10,7 @@ namespace JIGAPServerCSAPI.Logic
 {
     public abstract class BaseProcessLogic
     {
-        protected BaseServerLogic.LogPrinter _logPrinter = null;
+        protected Action<string> _logPrinter = null;
 
         public abstract bool InitializeProcessLogic();
         public abstract void ReleaseProccesLogic();
@@ -27,7 +27,7 @@ namespace JIGAPServerCSAPI.Logic
                 _logPrinter(inLog);
         }
         
-        public void SetLogPrinter(BaseServerLogic.LogPrinter inLogPrinter)
+        public void SetLogPrinter(Action<string> inLogPrinter)
         {
             if (inLogPrinter == null)
                 throw new ArgumentException("Param inLogPrinter is NULL");

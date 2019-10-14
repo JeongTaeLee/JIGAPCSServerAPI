@@ -9,15 +9,13 @@ namespace JIGAPServerCSAPI.Logic
 {
     public abstract class BaseServerLogic
     {
-        public delegate void LogPrinter(string inLog);
-
         protected BaseProcessLogic _processLogic = null;
         protected BaseProcessLogic processLogic { get => _processLogic; }
 
         protected Thread _acceptThread = null;
         protected Thread _ioThread = null;
 
-        protected LogPrinter _logPrinter = null;
+        protected Action<string> _logPrinter = null;
 
         protected bool _isServerOn = false;
         public bool isServerOn { get => _isServerOn; }
@@ -107,7 +105,7 @@ namespace JIGAPServerCSAPI.Logic
         /// 로그를 출력 할 수 있는 함수 포인터 변수를 셋팅합니다.
         /// </summary>
         /// <param name="inLogPrinter"></param>
-        public void SetLogPrinter(LogPrinter inLogPrinter)
+        public void SetLogPrinter(Action<string> inLogPrinter)
         {
             if (inLogPrinter == null)
                 throw new ArgumentException("Param inLogPrinter is NULL");

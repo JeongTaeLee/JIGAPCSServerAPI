@@ -12,7 +12,7 @@ namespace TestClient
         static void Main(string[] args)
         {
             JIGAPServerCSAPI.PacketMemoryPool.instance.InitializeMemoryPool(2048, 500000);
-            JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket socket = new JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket();
+            JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket socket = new JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket(2048);
             socket.Connect("127.0.0.1", 9199);
 
             byte[] buffer = new byte[2048];
