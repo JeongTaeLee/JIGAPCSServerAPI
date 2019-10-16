@@ -234,7 +234,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     {
                         AsyncEventSocket token = inArgs.UserToken as AsyncEventSocket;
 
-                        _processLogic.OnProcess(token, inArgs);
+                        _processLogic.OnRecv(token, inArgs);
 
                         bool isPending = token.socket.ReceiveAsync(inArgs);
 
@@ -299,10 +299,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     AsyncEventSocket socket = inArgs.UserToken as AsyncEventSocket;
 
                     // 전송을 완료했으므로 Packet을 뺍니다.
-                    BasePacket packet = socket.PopPacket();
+                    Packet packet = socket.PopPacket();
 
                     // Austin Fix : 패킷 Pool 처리를 해서 패킷을 돌려주세요.
-                    BasePacket.Destory(packet);
+                    Packet.Destory(packet);
 
                     // 패킷을 보낸 후 사이즈를 버퍼 사이즈를 정삭적으로 돌려놓습니다.
                     inArgs.SetBuffer(inArgs.Buffer, inArgs.Offset, _packetMaxSize);

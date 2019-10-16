@@ -49,9 +49,9 @@
     <Compile Include="AsyncEventAPI\AsyncEventServerLogic.cs" />
     <Compile Include="Logic\ServerLogic\BaseServerLogic.cs" />
     <Compile Include="PacketUtil\PacketResolve.cs" />
-    <Compile Include="Packet\BasePacket.cs" />
+    <Compile Include="Packet\Packet.cs" />
     <Compile Include="PacketUtil\PacketMemoryPool.cs" />
-    <Compile Include="Packet\TestPacket.cs" />
+    <Compile Include="Packet\BasicPacket.cs" />
     <Compile Include="Socket\BaseSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventSocket.cs" />

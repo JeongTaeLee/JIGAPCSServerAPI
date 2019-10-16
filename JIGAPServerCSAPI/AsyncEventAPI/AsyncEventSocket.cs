@@ -23,8 +23,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// <summary>
         /// 순차 전달을 위한 전달 패킷 컨테이너
         /// </summary>
-        public Queue<BasePacket> sendPackets { get => _sendPackets; }
-        private Queue<BasePacket> _sendPackets = new Queue<BasePacket>(100);
+        public Queue<Packet> sendPackets { get => _sendPackets; }
+        private Queue<Packet> _sendPackets = new Queue<Packet>(100);
 
         /// <summary>
         /// TCP 패킷 결합 담당 클래스
@@ -172,7 +172,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public void SendNextPacket()
         {
-            BasePacket packet = null;
+            Packet packet = null;
 
             lock (_sendPackets)
             {
@@ -195,7 +195,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             }
         }
 
-        public void PushPacket(BasePacket inPacket)
+        public void PushPacket(Packet inPacket)
         {
             if (inPacket == null)
                 throw new ArgumentException("Param inPacket is NULL");
@@ -220,12 +220,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             }
         }
 
-        public BasePacket PopPacket()
+        public Packet PopPacket()
         {
             if (_sendPackets.Count == 0)
                 return null;
 
-            BasePacket packet = null;
+            Packet packet = null;
 
             lock (_sendPackets)
             {
@@ -235,13 +235,13 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             return packet;
         }
 
-        public BasePacket PeekPacket()
+        public Packet PeekPacket()
         {
             if (_sendPackets.Count == 0)
                 return null;
                  
 
-            BasePacket packet = null;
+            Packet packet = null;
 
             lock (_sendPackets)
             {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestClient
 {
-    class TestPacket : JIGAPServerCSAPI.BasePacket
+    class TestPacket : JIGAPServerCSAPI.Packet
     {
         public void Initialize()
         {

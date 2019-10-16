@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace JIGAPServerCSAPI
 {
-    public class TestPacket : BasePacket
+    public class BasicPacket : Packet
     {
-        public TestPacket()
+        public BasicPacket()
         {
             _writingPosition += sizeof(int);
         }
@@ -29,6 +29,8 @@ namespace JIGAPServerCSAPI
 
             Buffer.BlockCopy(inArray, inOffset, _bufferSegment.Array, _writingPosition, inCount);
             _writingPosition += inCount;
+
+            
 
             WritePacketSize();
         }

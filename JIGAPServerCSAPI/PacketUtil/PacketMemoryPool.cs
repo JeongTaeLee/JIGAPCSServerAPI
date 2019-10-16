@@ -71,7 +71,7 @@ namespace JIGAPServerCSAPI
         /// <param name="inPacket"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public bool SetBuffer(BasePacket inPacket)
+        public bool SetBuffer(Packet inPacket)
         {
             if (_completeInitialize == false)
                 throw new Exception("You don't Intialize to PacketMemroy Pool Please PakcetMemoryPool.Instance.InitializeMemoryPool");
@@ -106,7 +106,7 @@ namespace JIGAPServerCSAPI
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="Exception"></exception>
-        public void FreeBuffer(BasePacket inPacket)
+        public void FreeBuffer(Packet inPacket)
         {
             if (_completeInitialize == false)
                 throw new Exception("You don't Intialize to PacketMemroy Pool Please PakcetMemoryPool.Instance.InitializeMemoryPool");

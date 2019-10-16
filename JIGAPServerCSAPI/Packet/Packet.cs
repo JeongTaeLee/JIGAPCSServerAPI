@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JIGAPServerCSAPI
 {
-    public abstract class BasePacket
+    public abstract class Packet
     {
         /// <summary>
         /// PacketMemoryPool에서 참조한 배열의 정보가 들어있는 구조체입니다.
@@ -44,7 +44,7 @@ namespace JIGAPServerCSAPI
         /// </summary>
         /// <typeparam name="T">인스턴스화 할 타입(BasePacket의 자식 클래스)</typeparam>
         /// <returns></returns>
-        public static T Create<T>() where T : BasePacket, new()
+        public static T Create<T>() where T : Packet, new()
         {
             T packet = new T();
 
@@ -58,7 +58,7 @@ namespace JIGAPServerCSAPI
         /// 인스턴스화된 패킷 삭제.
         /// </summary>
         /// <param name="inBasePacket"></param>
-        public static void Destory(BasePacket inBasePacket)
+        public static void Destory(Packet inBasePacket)
         {
             if (inBasePacket == null)
                 return;

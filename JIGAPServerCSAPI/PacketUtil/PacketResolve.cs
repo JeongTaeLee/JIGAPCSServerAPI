@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI
 {
@@ -20,7 +21,7 @@ namespace JIGAPServerCSAPI
             _buffers = new byte[_totalBufSize];
         }
 
-        public virtual void PacketCheck(byte[] inBuffer, int inOffset, int inBytesTransferred, Action<byte[], int, int> inCompleteAction)
+        public virtual void PacketCheck(SocketAsyncEventArgs inArgs, byte[] inBuffer, int inOffset, int inBytesTransferred, Action<SocketAsyncEventArgs, byte[], int, int> inCompleteAction)
         {
             int readBufSize = 0;
            
@@ -58,7 +59,7 @@ namespace JIGAPServerCSAPI
                 if (_writingPosition == _packetSize)
                 {
                     if (inCompleteAction != null)
-                        inCompleteAction(_buffers, sizeof(Int32), _writingPosition - sizeof(Int32));
+                        inCompleteAction(inArgs, _buffers, sizeof(Int32), _writingPosition - sizeof(Int32));
                 }
 
                 Array.Clear(_buffers, 0, _buffers.Length);

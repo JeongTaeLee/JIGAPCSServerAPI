@@ -52,10 +52,10 @@ namespace TestClient
                     JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket socket = inArgs.UserToken as JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket;
 
                     // 전송을 완료했으므로 Packet을 뺍니다.
-                    JIGAPServerCSAPI.BasePacket packet = socket.PopPacket();
+                    JIGAPServerCSAPI.Packet packet = socket.PopPacket();
 
                     // Austin Fix : 패킷 Pool 처리를 해서 패킷을 돌려주세요.
-                    JIGAPServerCSAPI.BasePacket.Destory(packet);
+                    JIGAPServerCSAPI.Packet.Destory(packet);
 
                     // 다음 패킷이 있으면 다음 패킷을 보냅니다.
                     socket.SendNextPacket();

@@ -16,7 +16,7 @@ namespace JIGAPServerCSAPI.Logic
         public abstract void ReleaseProccesLogic();
         public abstract void OnDisconnectClient(BaseSocket inSocket);
         public abstract void OnConnectClient(BaseSocket inSocket);
-        public abstract void OnProcess(BaseSocket inSocket, SocketAsyncEventArgs inArgs);
+        public abstract void OnRecv(BaseSocket inSocket, SocketAsyncEventArgs inArgs);
 
         protected void PrintLog(string inLog)
         {

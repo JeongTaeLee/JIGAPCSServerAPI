@@ -32,7 +32,7 @@ namespace TestServer
             PrintLog($"[TestProcessLogic.OnDisconnectClient] disconnect to server");
         }
 
-        public override void OnProcess(BaseSocket inSocket, SocketAsyncEventArgs inArgs)
+        public override void OnRecv(BaseSocket inSocket, SocketAsyncEventArgs inArgs)
         {
             JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket socket = inSocket as JIGAPServerCSAPI.AsyncEventAPI.AsyncEventSocket;
             socket.packetResolve.PacketCheck(inArgs.Buffer, inArgs.Offset, inArgs.BytesTransferred, PacketProcess);
