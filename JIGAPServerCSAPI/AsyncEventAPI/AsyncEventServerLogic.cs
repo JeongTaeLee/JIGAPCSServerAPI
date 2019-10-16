@@ -88,11 +88,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             {
                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
-                string fileName = stackTrace.GetFrame(0).GetFileName();
-                fileName = fileName.Substring(fileName.LastIndexOf('\\') + 1);
-
-                PrintLog($"[{fileName} Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-
+                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                PrintLog(ex.StackTrace);
                 return false;
             }
 
@@ -209,9 +206,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 {
                     if (_isServerOn == false)
                         return;
-                    
-                    PrintLog($"[{ex.TargetSite}] : { ex.Message}");
-                    
+
+                    System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
+
+                    PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                    PrintLog(ex.StackTrace);
+
                     OnCloseSocket(newClientSocket);
                 }
 
@@ -258,27 +258,17 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 }
 
             }
-            catch (ArgumentException ex)
-            {
-                if (_isServerOn == false)
-                    return;
-
-                PrintLog($"[{ex.TargetSite}] : { ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
-
-                AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
-
-                _processLogic.OnDisconnectClient(errorSocket);
-                OnCloseSocket(errorSocket);
-            }
             catch (Exception ex)
             {
                 if (_isServerOn == false)
                     return;
-                
-                PrintLog($"[{ex.TargetSite}] : { ex.Message }\r\n<Stack>\r\n{ex.StackTrace}");
+
+                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
+
+                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                PrintLog(ex.StackTrace);
 
                 AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
-
                 _processLogic.OnDisconnectClient(errorSocket);
                 OnCloseSocket(errorSocket);
             }
@@ -311,22 +301,15 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     socket.SendNextPacket();
                 }
             }
-            catch (SocketException ex)
-            {
-                if (_isServerOn == false)
-                    return;
-
-                PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
-
-                _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
-                OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
-            }
             catch (Exception ex)
             {
                 if (_isServerOn == false)
                     return;
 
-                PrintLog($"[{ex.TargetSite}] : { ex.Message}\r\n<Stack>\r\n{ex.StackTrace}");
+                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
+
+                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                PrintLog(ex.StackTrace);
 
                 _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
                 OnCloseSocket(inArgs.UserToken as AsyncEventSocket);
