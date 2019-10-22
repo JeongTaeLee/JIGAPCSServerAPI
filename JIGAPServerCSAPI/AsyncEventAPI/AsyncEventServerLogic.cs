@@ -22,7 +22,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             :base(inProcessLogic)
         {}
 
-
         /// <summary>
         /// 호출 시 서버 초기화와 서버 실행을 하는 함수입니다.
         /// </summary>
@@ -134,6 +133,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// </summary>
         public override void AcceptTask()
         {
+            PrintLog("Start Accept Task");
+
             while (true)
             {
                 base.AcceptTask();
@@ -196,7 +197,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 catch (SocketException ex)
                 {
                     if (_isServerOn == false)
-                        return;
+                        break ;
 
                     PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
 
@@ -205,7 +206,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 catch (Exception ex)
                 {
                     if (_isServerOn == false)
-                        return;
+                        break;
 
                     System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
@@ -216,6 +217,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 }
 
             }
+
+            PrintLog("End Accept Task");
         }
 
         /// <summary>

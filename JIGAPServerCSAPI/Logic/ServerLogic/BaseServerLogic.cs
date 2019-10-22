@@ -12,8 +12,8 @@ namespace JIGAPServerCSAPI.Logic
         protected BaseProcessLogic _processLogic = null;
         protected BaseProcessLogic processLogic { get => _processLogic; }
 
-        protected Thread _acceptThread = null;
-        protected Thread _ioThread = null;
+        protected Task _acceptTask = null;
+        protected Task _ioTask = null;
 
         protected Action<string> _logPrinter = null;
 
@@ -46,9 +46,7 @@ namespace JIGAPServerCSAPI.Logic
         /// <exception cref="OutOfMemoryException"></exception>
         protected void StartAcceptThread()
         {
-            _acceptThread = new Thread(new ThreadStart(AcceptTask));
-            _acceptThread.Start();
-            Thread.Sleep(0);
+            _acceptTask = Task.Run(() => { AcceptTask(); });
         }
 
         /// <summary>
@@ -60,10 +58,7 @@ namespace JIGAPServerCSAPI.Logic
         /// <exception cref="OutOfMemoryException"></exception>
         protected void StartIOThread()
         {
-            _ioThread = new Thread(new ThreadStart(IOThread));
-            _ioThread.Start();
-
-            Thread.Sleep(0);
+            _acceptTask = Task.Run(() => { IOThread(); });
         }
 
         /// <summary>
@@ -73,10 +68,7 @@ namespace JIGAPServerCSAPI.Logic
         /// <exception cref="ThreadInterruptedException"></exception>
         protected void JoinAcceptThread()
         {
-            if (_acceptThread != null)
-                _acceptThread.Join();
-
-            _acceptThread = null;
+            _acceptTask?.Wait();
         }
 
         /// <summary>
@@ -86,10 +78,7 @@ namespace JIGAPServerCSAPI.Logic
         /// <exception cref="ThreadInterruptedException"></exception>
         protected void JoinIOThread()
         {
-            if (_ioThread != null)
-                _ioThread.Join();
-
-            _ioThread = null;
+            _ioTask?.Wait();
         }
 
         protected void PrintLog(string inLog)
@@ -97,8 +86,7 @@ namespace JIGAPServerCSAPI.Logic
             if (string.IsNullOrEmpty(inLog))
                 throw new ArgumentException("Param inLog is Empty string and NULL");
 
-            if (_logPrinter != null)
-                _logPrinter(inLog);
+            _logPrinter?.Invoke(inLog);
         }
 
         /// <summary>
