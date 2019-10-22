@@ -57,6 +57,5 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 return _asyncEvents.Dequeue();
             }
         }
-
     }
 }

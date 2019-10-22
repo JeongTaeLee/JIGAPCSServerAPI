@@ -133,8 +133,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         /// </summary>
         public override void AcceptTask()
         {
-            PrintLog("Start Accept Task");
-
             while (true)
             {
                 base.AcceptTask();
@@ -197,7 +195,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 catch (SocketException ex)
                 {
                     if (_isServerOn == false)
-                        break ;
+                        return;
 
                     PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
 
@@ -206,7 +204,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 catch (Exception ex)
                 {
                     if (_isServerOn == false)
-                        break;
+                        return;
 
                     System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
@@ -217,8 +215,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 }
 
             }
-
-            PrintLog("End Accept Task");
         }
 
         /// <summary>

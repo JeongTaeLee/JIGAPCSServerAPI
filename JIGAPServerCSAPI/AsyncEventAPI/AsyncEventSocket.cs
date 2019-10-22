@@ -13,7 +13,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
     {
         public Socket socket { get => _socket; }
         private Socket _socket = null;
-
         public SocketAsyncEventArgs recvArgs { get => _recvArgs; }
         private SocketAsyncEventArgs _recvArgs = null;
 
@@ -39,8 +38,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
         public AsyncEventSocket(int inMaxPacketSize) {
             _packetResolve = new PacketResolve(inMaxPacketSize); 
-
         }
+
+        private object _userToken = null;
+        public object userToken { get => _userToken; }
 
         /// <summary>
         /// 인자로 받은 정보로 서버 시작
@@ -153,6 +154,11 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _socket = inSocket;
         }
 
+        public void SetUserToken(object inToken)
+        {
+            _userToken = inToken;
+        }
+
         public void SetAsyncEvent(SocketAsyncEventArgs inRecvArgs, SocketAsyncEventArgs inSendArgs)
         {
             if (inRecvArgs == null || inSendArgs == null)
@@ -199,13 +205,18 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         {
             if (inPacket == null)
                 throw new ArgumentException("Param inPacket is NULL");
-                
+
+            Packet sendPacket = null;
+
             lock (_sendPackets)
             {
-                _sendPackets.Enqueue(inPacket); 
+                _sendPackets.Enqueue(inPacket);
+
+                if (_sendPackets.Count == 1)
+                    sendPacket = PeekPacket();
             }
 
-            if (_sendPackets.Count == 1)
+            if (sendPacket != null)
             {
                 Array.Copy(inPacket.buffer.Array, inPacket.buffer.Offset, _sendArgs.Buffer, 0, inPacket.writingPosition);
 
