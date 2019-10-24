@@ -15,8 +15,6 @@ namespace JIGAPServerCSAPI.Logic
         protected Task _acceptTask = null;
         protected Task _ioTask = null;
 
-        protected Action<string> _logPrinter = null;
-
         protected bool _isServerOn = false;
         public bool isServerOn { get => _isServerOn; }
 
@@ -81,14 +79,6 @@ namespace JIGAPServerCSAPI.Logic
             _ioTask?.Wait();
         }
 
-        protected void PrintLog(string inLog)
-        {
-            if (string.IsNullOrEmpty(inLog))
-                throw new ArgumentException("Param inLog is Empty string and NULL");
-
-            _logPrinter?.Invoke(inLog);
-        }
-
         /// <summary>
         /// 로그를 출력 할 수 있는 함수 포인터 변수를 셋팅합니다.
         /// </summary>
@@ -98,9 +88,7 @@ namespace JIGAPServerCSAPI.Logic
             if (inLogPrinter == null)
                 throw new ArgumentException("Param inLogPrinter is NULL");
 
-            _logPrinter = inLogPrinter;
-
-            _processLogic.SetLogPrinter(_logPrinter);
+            Loger.Initialzie(inLogPrinter);
         }
 
        

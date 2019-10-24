@@ -80,15 +80,15 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                 _isServerOn = true;
 
-                PrintLog("Server started successfully");
+                Loger.Log("Server started successfully");
                 
             }
             catch (Exception ex)
             {
                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
-                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                PrintLog(ex.StackTrace);
+                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                Loger.Log(ex.StackTrace);
                 return false;
             }
 
@@ -125,7 +125,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             _processLogic?.ReleaseProccesLogic();
             _processLogic = null;
 
-            PrintLog("Server ended successfully");
+            Loger.Log("Server ended successfully");
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                     if (newClientSocket == null)
                     {
-                        PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _asyncEventSocketPool");
+                        Loger.Log("[AsyncEventServerLogic.AcceptTast] Can't pop to _asyncEventSocketPool");
                         continue;
                     }
 
@@ -156,7 +156,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                         SocketAsyncEventArgs recvArgs = _recvAsyncEventPool.Pop();
                         if (recvArgs == null)
                         {
-                            PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool");
+                            Loger.Log("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool");
 
                             newClientSocket.CloseSocket();
 
@@ -169,7 +169,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                         SocketAsyncEventArgs sendArgs = _sendAsyncEventPool.Pop();
                         if (sendArgs == null)
                         {
-                            PrintLog("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool ");
+                            Loger.Log("[AsyncEventServerLogic.AcceptTast] Can't pop to _recvAsyncEventPool ");
 
                             newClientSocket.CloseSocket();
 
@@ -197,7 +197,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     if (_isServerOn == false)
                         return;
 
-                    PrintLog($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
+                    Loger.Log($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
 
                     OnCloseSocket(newClientSocket);
                 }
@@ -208,8 +208,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                     System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
-                    PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                    PrintLog(ex.StackTrace);
+                    Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                    Loger.Log(ex.StackTrace);
 
                     OnCloseSocket(newClientSocket);
                 }
@@ -264,8 +264,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
-                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                PrintLog(ex.StackTrace);
+                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                Loger.Log(ex.StackTrace);
 
                 AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
                 _processLogic.OnDisconnectClient(errorSocket);
@@ -307,8 +307,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
                 System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
 
-                PrintLog($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                PrintLog(ex.StackTrace);
+                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
+                Loger.Log(ex.StackTrace);
 
                 _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
                 OnCloseSocket(inArgs.UserToken as AsyncEventSocket);

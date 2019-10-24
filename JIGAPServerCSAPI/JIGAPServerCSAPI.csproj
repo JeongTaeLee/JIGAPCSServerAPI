@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="AsyncEventAPI\AsyncEventObjectPool.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventSocketPool.cs" />
+    <Compile Include="Loger\Loger.cs" />
     <Compile Include="MonoSingleton\Singleton.cs" />
     <Compile Include="AsyncEventAPI\AsyncEventMemoryPool.cs" />
     <Compile Include="Logic\ProcessLogic\BaseProcessLogic.cs" />
