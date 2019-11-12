@@ -8,14 +8,14 @@ namespace JIGAPServerCSAPI
 {
     static class Loger
     {
-        private static Action<string> logPrinter = null;
+        private static Action<string[]> logPrinter = null;
 
-        public static void Initialzie(Action<string> inLogPrinter)
+        public static void Initialzie(Action<string[]> inLogPrinter)
         {
             logPrinter = inLogPrinter;
         }
 
-        public static void Log(string log)
+        public static void Log(params string[] log)
         {
             logPrinter?.Invoke(log);
         }

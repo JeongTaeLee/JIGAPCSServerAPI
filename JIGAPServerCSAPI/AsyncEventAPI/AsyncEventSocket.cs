@@ -218,7 +218,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             if (sendPacket != null)
             {
-                Array.Copy(inPacket.buffer.Array, inPacket.buffer.Offset, _sendArgs.Buffer, 0, inPacket.writingPosition);
+                Array.Copy(sendPacket.buffer.Array, sendPacket.buffer.Offset, _sendArgs.Buffer, _sendArgs.Offset, inPacket.writingPosition);
 
                 _sendArgs.SetBuffer(_sendArgs.Buffer, _sendArgs.Offset, inPacket.writingPosition);
                 bool panding = _socket.SendAsync(_sendArgs);

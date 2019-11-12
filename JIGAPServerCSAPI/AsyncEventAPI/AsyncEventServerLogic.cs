@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI.AsyncEventAPI
 {
-    public class AsyncEventServerLogic : Logic.BaseServerLogic
+    public class AsyncEventServerLogic : Logic.BaseServerLogic<AsyncEventSocket>
     {
         private AsyncEventSocket _serverSocket = null;
         public AsyncEventSocket serverSocket { get => _serverSocket; }
@@ -18,9 +18,17 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
         private AsyncEventObjectPool _recvAsyncEventPool = null;
         private AsyncEventObjectPool _sendAsyncEventPool = null;
 
-        public AsyncEventServerLogic(Logic.BaseProcessLogic inProcessLogic)
+        Action<AsyncEventSocket> _socketSettingBehaviour = null;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="inProcessLogic">서버의 프로세스 로직입니다.</param>
+        /// <param name="inSetSocketBehaviour">새로운 소켓이 생성된 소켓을 설정할 수 있는 CallBakc입니다. 새로 생성된 소켓이 매개변수로 전달됩니다. 없을 시 기본 생성됩니다.</param>
+        public AsyncEventServerLogic(Logic.BaseProcessLogic<AsyncEventSocket> inProcessLogic, Action<AsyncEventSocket> inSocketSettingBehaviour = null)
             :base(inProcessLogic)
-        {}
+        {
+            _socketSettingBehaviour = inSocketSettingBehaviour;
+        }
 
         /// <summary>
         /// 호출 시 서버 초기화와 서버 실행을 하는 함수입니다.
@@ -44,6 +52,8 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 for (int i = 0; i < _userMaxCount; ++i)
                 {
                     AsyncEventSocket _socket = new AsyncEventSocket(_packetMaxSize);
+                    _socketSettingBehaviour?.Invoke(_socket);
+
                     _socket.SetSendCompleteSendProcess(OnSendCompleteEventCallBack);
                 
                     _asyncEventSocketPool.Push(_socket);
@@ -58,7 +68,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 
                 
                     if (_asyncEventMemoryPool.SetBuffer(args) == false)
-                        throw new Exception("asyncEventMemoryPool Size Over");
+                        throw new Exception("[AsyncEventServerLogic.StartServer] asyncEventMemoryPool Size Over");
                 
                     _recvAsyncEventPool.Push(args);
                 }
@@ -71,7 +81,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     args.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleteEventCallBack);
                 
                     if (_asyncEventMemoryPool.SetBuffer(args) == false)
-                        throw new Exception("asyncEventMemoryPool Size Over");
+                        throw new Exception("[AsyncEventServerLogic.StartServer] asyncEventMemoryPool Size Over");
                 
                     _sendAsyncEventPool.Push(args);
                 }
@@ -79,16 +89,10 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 StartAcceptThread();
 
                 _isServerOn = true;
-
-                Loger.Log("Server started successfully");
-                
             }
             catch (Exception ex)
             {
-                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                Loger.Log(ex.StackTrace);
+                Loger.Log($"[AsyncEventServerLogic.StartServer] : {ex.Message}", ex.StackTrace);
                 return false;
             }
 
@@ -124,8 +128,6 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
 
             _processLogic?.ReleaseProccesLogic();
             _processLogic = null;
-
-            Loger.Log("Server ended successfully");
         }
 
         /// <summary>
@@ -192,24 +194,12 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                         _asyncEventSocketPool.Push(newClientSocket);
 
                 }
-                catch (SocketException ex)
-                {
-                    if (_isServerOn == false)
-                        return;
-
-                    Loger.Log($"[Socket Error : {ex.SocketErrorCode} / {ex.TargetSite}] : {ex.Message}");
-
-                    OnCloseSocket(newClientSocket);
-                }
                 catch (Exception ex)
                 {
                     if (_isServerOn == false)
                         return;
 
-                    System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                    Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                    Loger.Log(ex.StackTrace);
+                    Loger.Log($"[AsyncEventServerLogic.AcceptTask] : {ex.Message}", ex.StackTrace);
 
                     OnCloseSocket(newClientSocket);
                 }
@@ -233,7 +223,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                     {
                         AsyncEventSocket token = inArgs.UserToken as AsyncEventSocket;
 
-                        _processLogic.OnRecv(token, inArgs);
+                        _processLogic.OnRecv(token, inArgs.Buffer, inArgs.Offset, inArgs.BytesTransferred);
 
                         bool isPending = token.socket.ReceiveAsync(inArgs);
 
@@ -261,12 +251,9 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
             {
                 if (_isServerOn == false)
                     return;
-
-                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                Loger.Log(ex.StackTrace);
-
+                
+                Loger.Log($"[AsyncEventServerLogic.OnRecvCompleteEventCallBack] : { ex.Message}", ex.StackTrace);
+                
                 AsyncEventSocket errorSocket = inArgs.UserToken as AsyncEventSocket;
                 _processLogic.OnDisconnectClient(errorSocket);
                 OnCloseSocket(errorSocket);
@@ -305,10 +292,7 @@ namespace JIGAPServerCSAPI.AsyncEventAPI
                 if (_isServerOn == false)
                     return;
 
-                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(ex, true);
-
-                Loger.Log($"Line : {stackTrace.GetFrame(0).GetFileLineNumber()}] : { ex.Message}");
-                Loger.Log(ex.StackTrace);
+                Loger.Log($"[AsyncEventServerLogic.OnSendCompleteEventCallBack] : { ex.Message}", ex.StackTrace);
 
                 _processLogic.OnDisconnectClient(inArgs.UserToken as AsyncEventSocket);
                 OnCloseSocket(inArgs.UserToken as AsyncEventSocket);

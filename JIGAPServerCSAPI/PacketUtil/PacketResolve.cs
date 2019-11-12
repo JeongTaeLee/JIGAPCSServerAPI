@@ -21,12 +21,12 @@ namespace JIGAPServerCSAPI
             _buffers = new byte[_totalBufSize];
         }
 
-        public virtual void PacketCheck(SocketAsyncEventArgs inArgs, byte[] inBuffer, int inOffset, int inBytesTransferred, Action<SocketAsyncEventArgs, byte[], int, int> inCompleteAction)
+        public virtual void PacketCheck<SocketType>(SocketType inSocket, byte[] inBuffer, int inOffset, int inBytesTransferred, Action<SocketType, byte[], int, int> inCompleteAction) where SocketType : BaseSocket
         {
             int readBufSize = 0;
-           
+
             while (true)
-            {    
+            {
                 if (_isReadHeader == false)
                 {
                     if ((inBytesTransferred - readBufSize) >= sizeof(Int32))
@@ -45,7 +45,7 @@ namespace JIGAPServerCSAPI
                     }
                 }
 
-                if (inBytesTransferred - readBufSize >= (_packetSize - sizeof(Int32)) )
+                if (inBytesTransferred  - readBufSize >= (_packetSize - sizeof(Int32)))
                 {
                     ConnectPacketToBuffer(inBuffer, inOffset + readBufSize, (_packetSize - sizeof(Int32)));
                     readBufSize += _packetSize - sizeof(Int32);
@@ -59,7 +59,7 @@ namespace JIGAPServerCSAPI
                 if (_writingPosition == _packetSize)
                 {
                     if (inCompleteAction != null)
-                        inCompleteAction(inArgs, _buffers, sizeof(Int32), _writingPosition - sizeof(Int32));
+                        inCompleteAction(inSocket, _buffers, sizeof(Int32), _writingPosition - sizeof(Int32));
                 }
 
                 Array.Clear(_buffers, 0, _buffers.Length);
@@ -68,11 +68,13 @@ namespace JIGAPServerCSAPI
                 _writingPosition = 0;
                 _packetSize = 0;
 
-                
+
                 if (readBufSize >= inBytesTransferred)
                     break;
             }
         }
+
+       
             
         public virtual void ConnectPacketToBuffer(byte[] inBuffer, int inOffset, int inBytesTransferred)
         {

@@ -7,10 +7,10 @@ using System.Threading;
 
 namespace JIGAPServerCSAPI.Logic
 {
-    public abstract class BaseServerLogic
+    public abstract class BaseServerLogic<SocketType> where SocketType : BaseSocket
     {
-        protected BaseProcessLogic _processLogic = null;
-        protected BaseProcessLogic processLogic { get => _processLogic; }
+        protected BaseProcessLogic<SocketType> _processLogic = null;
+        protected BaseProcessLogic<SocketType> processLogic { get => _processLogic; }
 
         protected Task _acceptTask = null;
         protected Task _ioTask = null;
@@ -23,7 +23,7 @@ namespace JIGAPServerCSAPI.Logic
         protected int _packetMaxSize = 2048;
         
 
-        public BaseServerLogic(BaseProcessLogic inProcessLogic)
+        public BaseServerLogic(BaseProcessLogic<SocketType> inProcessLogic)
         {
             _processLogic = inProcessLogic;
             _processLogic.InitializeProcessLogic();
@@ -83,7 +83,7 @@ namespace JIGAPServerCSAPI.Logic
         /// 로그를 출력 할 수 있는 함수 포인터 변수를 셋팅합니다.
         /// </summary>
         /// <param name="inLogPrinter"></param>
-        public void SetLogPrinter(Action<string> inLogPrinter)
+        public void SetLogPrinter(Action<string[]> inLogPrinter)
         {
             if (inLogPrinter == null)
                 throw new ArgumentException("Param inLogPrinter is NULL");

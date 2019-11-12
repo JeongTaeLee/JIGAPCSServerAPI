@@ -8,12 +8,12 @@ using System.Net.Sockets;
 
 namespace JIGAPServerCSAPI.Logic
 {
-    public abstract class BaseProcessLogic
+    public abstract class BaseProcessLogic<T> where T : BaseSocket
     { 
         public abstract bool InitializeProcessLogic();
         public abstract void ReleaseProccesLogic();
-        public abstract void OnDisconnectClient(BaseSocket inSocket);
-        public abstract void OnConnectClient(BaseSocket inSocket);
-        public abstract void OnRecv(BaseSocket inSocket, SocketAsyncEventArgs inArgs);
+        public abstract void OnDisconnectClient(T inSocket);
+        public abstract void OnConnectClient(T inSocket);
+        public abstract void OnRecv(T inSocket, byte[] _buffer, int inOffset, int inByteTransferred);
     }
 }
